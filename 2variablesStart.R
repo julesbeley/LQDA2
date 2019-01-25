@@ -1,16 +1,19 @@
 X1 <-
     data.frame(
-        x1 = rnorm(1000, mean = 0, sd = 1),
-        x2 = rnorm(1000, mean = 3, sd = 1),
+        x1 = rnorm(100, mean = 0, sd = 1),
+        x2 = rnorm(100, mean = 3, sd = 1),
         class = "black"
     )
 X2 <-
     data.frame(
-        x1 = rnorm(2000, mean = -4, sd = 1),
-        x2 = rnorm(2000, mean = 8, sd = 1),
+        x1 = rnorm(200, mean = -4, sd = 1),
+        x2 = rnorm(200, mean = 8, sd = 1),
         class = "white"
     )
-X <- rbind(X1, X2)
+X3 <- data.frame(x1 = rnorm(500, mean = -8, sd = 1),
+                 x2 = rnorm(500, mean = 6, sd = 1),
+                 class = "orange")
+X <- rbind(X1, X2, X3)
 plot(X$x1[X$class == "black"], X$x2[X$class == "black"], xlim = c(-9, 5), ylim = c(-1, 12))
 points(X$x1[X$class == "white"], X$x2[X$class == "white"], col = "red")
 
@@ -25,29 +28,41 @@ lda2 <- function(value, data) {
     mu <- matrix(nrow = 2, ncol = n_cla)
     for (i in (1:n_cla)) {
         pi[i] <- tab[i] / dim(data)[1]
-        mu[1, i] <- mean(data$x1[data$class == nam[i]]) # mean matrix: (class1:x1 ... class2:x1)
-        mu[2, i] <- mean(data$x2[data$class == nam[i]]) #              (class1:x2 ... class2:x2)
+        mu[1, i] <- mean(data$x1[data$class == nam[i]]) # mean matrix: (class1:x1 ... classn:x1)
+        mu[2, i] <- mean(data$x2[data$class == nam[i]]) #              (class1:x2 ... classn:x2)
     }
-    values <- list()
-    deviation <- list()
+    val <- list()
+    dev <- list()
     means <- matrix(nrow = n_cla, ncol = 2)
-    multiplied <- list()
-    ccovariance <- list()
+    mul <- list()
+    ccov <- list()
     for (i in (1:n_cla)) {
-        values[[i]] <- matrix(nrow = tab[i], ncol = 2)
-        values[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
-        deviation[[i]] <- matrix(nrow = tab[i], ncol = 2)  
-        means[i,] <- cbind(mean(data$x1[data$class == nam[i]]), mean(data$x2[data$class == nam[i]]))
+        val[[i]] <- matrix(nrow = tab[i], ncol = 2)
+        val[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
+        dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
+        means[i,] <- cbind(mean(data$x1[data$class == nam[i]]), mean(data$x2[data$class == nam[i]])) # redundant with mu!
         for (j in (1:tab[i])) {
-            deviation[[i]][j,] <- values[[i]][j, ] - means[i, ]
+            dev[[i]][j,] <- val[[i]][j, ] - means[i, ]
         }
-        multiplied[[i]] <- matrix(nrow = 2, ncol = 2)
-        ccovariance[[i]] <- matrix(nrow = 2, ncol = 2)
-        multiplied[[i]] <- t(deviation[[i]]) %*% deviation[[i]]
-        ccovariance[[i]] <- multiplied[[i]] / (dim(data)[1] - n_cla)  
+        mul[[i]] <- matrix(nrow = 2, ncol = 2)
+        ccov[[i]] <- matrix(nrow = 2, ncol = 2)
+        mul[[i]] <- t(dev[[i]]) %*% dev[[i]] 
+        ccov[[i]] <- mul[[i]] / (dim(data)[1] - n_cla) 
     }
-    covariance <- Reduce('+', ccovariance)
-    return(covariance)
+    dis <- c()
+    exp <- c()
+    cov <- Reduce('+', ccov)
+    inv <- solve(cov)
+    for (i in (1:n_cla)) {
+        dis[i] <- t(value) %*% inv %*% mu[, i] - (0.5 %*% t(mu[, i]) %*% inv %*% mu[, i]) + log(pi[i])
+    }
+    prob <- c()
+    prob <- exp(dis) / sum(exp(dis))
+    names(dis) <- nam
+    class <- names(dis)[dis == max(dis)]
+    score <- max(dis)
+    proba <- max(prob)
+    out <- as.data.frame(cbind(class, score, proba))
+    return(out)
 }
-lda2(1, X)
-
+lda2(c(-2,5), X)
