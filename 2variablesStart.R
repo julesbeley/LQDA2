@@ -15,7 +15,12 @@ X3 <- data.frame(
     x2 = rnorm(500, mean = 0, sd = 1),
     class = "orange"
 )
-X <- rbind(X1, X2, X3)
+X4 <- data.frame(
+    x1 = rnorm(200, mean = -2, sd = 1),
+    x2 = rnorm(200, mean = 0, sd = 1),
+    class = "red"
+)
+X <- rbind(X1, X2, X3, X4)
 
 lda2 <- function(value, data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
@@ -99,14 +104,18 @@ lda2 <- function(value, data) {
     orth[[1]] <- NULL
     orth[[0.5 * n_cla * (n_cla - 1) + 1]] <- NULL # we have n(n-1)/2 segments between n points and n(n-1)/2+2 vectors in orth
     slope <- c()
-    interc <- c()
     for (i in (1:(0.5 * n_cla * (n_cla - 1)))) {
         slope[i] <- -orth[[i]][1, ] / orth[[i]][2, ]
-        interc[i] <- -(slope * 0.5 * (mu[1, 1] + mu[2, 1]) - 0.5 * (mu[2, 2] + mu[1, 2])) # intercept wil have to be double indexed (matrix, because of combinatorics)
     }
-    abline(b = slope,
-           a = -(slope * 0.5 * (mu[1, 1] + mu[2, 1]) - 0.5 * (mu[2, 2] + mu[1, 2])))
-    return(list(pi, cov, out, slope))
+    interc <- matrix(nrow = n_cla, ncol = n_cla)
+    for (i in (1:n_cla)) {
+        for (k in (i:n_cla)) {
+            interc[i,k] <- -(slope[i] * 0.5 * (mu[i, 1] + mu[k, 1]) - 0.5 * (mu[i, 2] + mu[k, 2])) # intercept wil have to be double indexed (matrix, because of combinatorics)
+        }
+    }
+    abline(b = slope[2],
+           a = interc[3,3]) # [1,2], [2,3], [3,2] are the correct intercepts for three classes
+    return(list(pi, cov, out, slope, interc))
 }
 lda2(c(-2, 5), X)
 abline(a = 7.2, b = 0.835)
