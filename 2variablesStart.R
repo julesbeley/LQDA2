@@ -10,9 +10,10 @@ X2 <-
         x2 = rnorm(200, mean = 8, sd = 1),
         class = "white"
     )
-X3 <- data.frame(x1 = rnorm(500, mean = -8, sd = 1),
-                 x2 = rnorm(500, mean = 0, sd = 1),
-                 class = "orange"
+X3 <- data.frame(
+    x1 = rnorm(500, mean = -8, sd = 1),
+    x2 = rnorm(500, mean = 0, sd = 1),
+    class = "orange"
 )
 X <- rbind(X1, X2, X3)
 
@@ -63,20 +64,18 @@ lda2 <- function(value, data) {
     score <- max(dis)
     proba <- max(prob)
     out <- as.data.frame(cbind(class, score, proba))
-    maxx1 <- c()
-    minx1 <- c()
-    maxx2 <- c()
-    minx2 <- c()
+    maxx <- matrix(nrow = n_cla, ncol = 2)
+    minx <- matrix(nrow = n_cla, ncol = 2)
     for (i in (1:n_cla)) {
-        maxx1[i] <- mu[i, 1] + 4 * sqrt(cov[1, 1])
-        minx1[i] <- mu[i, 1] - 4 * sqrt(cov[1, 1])
-        maxx2[i] <- mu[i, 2] + 4 * sqrt(cov[2, 2])
-        minx2[i] <- mu[i, 2] - 4 * sqrt(cov[2, 2])
+        for (j in (1:2)) {
+            maxx[i, j] <- mu[i, j] + 4 * sqrt(cov[j, j])
+            minx[i, j] <- mu[i, j] - 4 * sqrt(cov[j, j])
+        }
     }
-    maxx1 <- max(maxx1)
-    minx1 <- min(minx1)
-    maxx2 <- max(maxx2)
-    minx2 <- min(minx2)
+    maxx1 <- max(maxx[, 1])
+    minx1 <- min(minx[, 1])
+    maxx2 <- max(maxx[, 2])
+    minx2 <- min(minx[, 2])
     col <- heat.colors(n = n_cla)
     plot(
         X$x1[X$class == nam[1]],
@@ -92,12 +91,25 @@ lda2 <- function(value, data) {
                X$x2[X$class == nam[i]],
                col = col[i])
     }
+    orth <- list()
     for (i in (1:n_cla)) {
-        points(mu[i,1], mu[i,2], pch = 19)
+        points(mu[i, 1], mu[i, 2], pch = 19)
         for (k in (1:n_cla)) {
-            points(0.5 * (mu[i,1] + mu[k,1]), 0.5 * (mu[i,2] + mu[k,2]), pch = 19)
+            points(0.5 * (mu[i, 1] + mu[k, 1]), 0.5 * (mu[i, 2] + mu[k, 2]), pch = 19)
+            orth[[i + k - 1]] <- c()
+            orth[[i + k - 1]] <- inv %*% (mu[i,] - mu[k,])
         }
     }
-    return(list(pi, cov, out))
+    orth[[1]] <- NULL
+    orth[[0.5 * n_cla * (n_cla - 1) + 1]] <- NULL # we have n(n-1)/2 segments between n points and n(n-1)/2+2 vectors in orth
+    slope <- c()
+    for (i in (1:(0.5 * n_cla * (n_cla - 1)))) {
+        
+    }
+    slope <- -orth[[1]][1, ] / orth[[1]][2, ]
+    abline(b = slope,
+           a = -(slope * 0.5 * (mu[1, 1] + mu[2, 1]) - 0.5 * (mu[2, 2] + mu[1, 2])))
+    return(list(pi, cov, out, mu))
 }
 lda2(c(-2, 5), X)
+abline(a = 7.2, b = 0.835)
