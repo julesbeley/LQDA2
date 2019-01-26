@@ -16,8 +16,6 @@ X3 <- data.frame(
     class = "orange"
 )
 X <- rbind(X1, X2, X3)
-plot(X$x1[X$class == "black"], X$x2[X$class == "black"], xlim = c(-9, 5), ylim = c(-1, 12))
-points(X$x1[X$class == "white"], X$x2[X$class == "white"], col = "red")
 
 lda2 <- function(value, data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
@@ -30,10 +28,8 @@ lda2 <- function(value, data) {
     mu <- matrix(nrow = n_cla, ncol = 2)
     for (i in (1:n_cla)) {
         pi[i] <- tab[i] / dim(data)[1]
-        mu[i, 1] <-
-            mean(data$x1[data$class == nam[i]]) # mean matrix: (class1:x1 ... classn:x1)
-        mu[i, 2] <-
-            mean(data$x2[data$class == nam[i]]) #              (class1:x2 ... classn:x2)
+        mu[i, 1] <- mean(data$x1[data$class == nam[i]]) # mean matrix: (class1:x1 ... classn:x1)
+        mu[i, 2] <- mean(data$x2[data$class == nam[i]]) #              (class1:x2 ... classn:x2)
     }
     names(pi) <- nam
     val <- list()
@@ -42,8 +38,7 @@ lda2 <- function(value, data) {
     ccov <- list()
     for (i in (1:n_cla)) {
         val[[i]] <- matrix(nrow = tab[i], ncol = 2)
-        val[[i]] <-
-            cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
+        val[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
             dev[[i]][j, ] <- val[[i]][j,] - mu[i,]
@@ -60,8 +55,7 @@ lda2 <- function(value, data) {
     colnames(cov) <- c("x1", "x2")
     inv <- solve(cov)
     for (i in (1:n_cla)) {
-        dis[i] <-
-            t(value) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
+        dis[i] <- t(value) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
     }
     prob <- c()
     prob <- exp(dis) / sum(exp(dis))
@@ -90,7 +84,9 @@ lda2 <- function(value, data) {
         X$x2[X$class == nam[1]],
         xlim = c(minx1, maxx1),
         ylim = c(minx2, maxx2),
-        col = col[1]
+        col = col[1],
+        xlab = "X1",
+        ylab = "X2"
     )
     for (i in (2:n_cla)) {
         points(X$x1[X$class == nam[i]],
