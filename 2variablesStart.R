@@ -10,10 +10,9 @@ X2 <-
         x2 = rnorm(200, mean = 8, sd = 1),
         class = "white"
     )
-X3 <- data.frame(
-    x1 = rnorm(500, mean = -8, sd = 1),
-    x2 = rnorm(500, mean = 6, sd = 1),
-    class = "orange"
+X3 <- data.frame(x1 = rnorm(500, mean = -8, sd = 1),
+                 x2 = rnorm(500, mean = 0, sd = 1),
+                 class = "orange"
 )
 X <- rbind(X1, X2, X3)
 
@@ -92,6 +91,12 @@ lda2 <- function(value, data) {
         points(X$x1[X$class == nam[i]],
                X$x2[X$class == nam[i]],
                col = col[i])
+    }
+    for (i in (1:n_cla)) {
+        points(mu[i,1], mu[i,2], pch = 19)
+        for (k in (1:n_cla)) {
+            points(0.5 * (mu[i,1] + mu[k,1]), 0.5 * (mu[i,2] + mu[k,2]), pch = 19)
+        }
     }
     return(list(pi, cov, out))
 }
