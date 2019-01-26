@@ -72,16 +72,12 @@ lda2 <- function(value, data) {
             minx[i, j] <- mu[i, j] - 4 * sqrt(cov[j, j])
         }
     }
-    maxx1 <- max(maxx[, 1])
-    minx1 <- min(minx[, 1])
-    maxx2 <- max(maxx[, 2])
-    minx2 <- min(minx[, 2])
     col <- heat.colors(n = n_cla)
     plot(
         X$x1[X$class == nam[1]],
         X$x2[X$class == nam[1]],
-        xlim = c(minx1, maxx1),
-        ylim = c(minx2, maxx2),
+        xlim = c(min(minx[, 1]), max(maxx[, 1])),
+        ylim = c(min(minx[, 2]), max(maxx[, 2])),
         col = col[1],
         xlab = "X1",
         ylab = "X2"
@@ -96,20 +92,21 @@ lda2 <- function(value, data) {
         points(mu[i, 1], mu[i, 2], pch = 19)
         for (k in (1:n_cla)) {
             points(0.5 * (mu[i, 1] + mu[k, 1]), 0.5 * (mu[i, 2] + mu[k, 2]), pch = 19)
-            orth[[i + k - 1]] <- c()
+            orth[[i + k - 1]] <- c() # does this indexing work for >3 classes (empty elements?)
             orth[[i + k - 1]] <- inv %*% (mu[i,] - mu[k,])
         }
     }
     orth[[1]] <- NULL
     orth[[0.5 * n_cla * (n_cla - 1) + 1]] <- NULL # we have n(n-1)/2 segments between n points and n(n-1)/2+2 vectors in orth
     slope <- c()
+    interc <- c()
     for (i in (1:(0.5 * n_cla * (n_cla - 1)))) {
-        
+        slope[i] <- -orth[[i]][1, ] / orth[[i]][2, ]
+        interc[i] <- -(slope * 0.5 * (mu[1, 1] + mu[2, 1]) - 0.5 * (mu[2, 2] + mu[1, 2])) # intercept wil have to be double indexed (matrix, because of combinatorics)
     }
-    slope <- -orth[[1]][1, ] / orth[[1]][2, ]
     abline(b = slope,
            a = -(slope * 0.5 * (mu[1, 1] + mu[2, 1]) - 0.5 * (mu[2, 2] + mu[1, 2])))
-    return(list(pi, cov, out, mu))
+    return(list(pi, cov, out, slope))
 }
 lda2(c(-2, 5), X)
 abline(a = 7.2, b = 0.835)
