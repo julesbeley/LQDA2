@@ -1,28 +1,39 @@
+X0 <-
+    data.frame(
+        x1 = rnorm(200, mean = -10, sd = 1),
+        x2 = rnorm(200, mean = 0, sd = 1),
+        class = "black"
+    )
 X1 <-
     data.frame(
-        x1 = rnorm(100, mean = 0, sd = 1),
-        x2 = rnorm(100, mean = 3, sd = 1),
+        x1 = rnorm(200, mean = -7, sd = 1),
+        x2 = rnorm(200, mean = 3, sd = 1),
         class = "black"
     )
 X2 <-
     data.frame(
         x1 = rnorm(200, mean = -4, sd = 1),
-        x2 = rnorm(200, mean = 8, sd = 1),
+        x2 = rnorm(200, mean = 6, sd = 1),
         class = "white"
     )
 X3 <- data.frame(
-    x1 = rnorm(500, mean = -8, sd = 1),
-    x2 = rnorm(500, mean = 0, sd = 1),
+    x1 = rnorm(200, mean = -1, sd = 1),
+    x2 = rnorm(200, mean = 9, sd = 1),
     class = "orange"
 )
 X4 <- data.frame(
-    x1 = rnorm(200, mean = -2, sd = 1),
-    x2 = rnorm(200, mean = 0, sd = 1),
+    x1 = rnorm(200, mean = 2, sd = 1),
+    x2 = rnorm(200, mean = 12, sd = 1),
     class = "red"
 )
-X <- rbind(X1, X2, X3, X4)
+X5 <- data.frame(
+    x1 = rnorm(200, mean = 5, sd = 1),
+    x2 = rnorm(200, mean = 15, sd = 1),
+    class = "blue"
+)
+X <- rbind(X0,X1, X2, X3, X4, X5)
 
-lda2 <- function(value, data) {
+lda2 <- function(data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
         names(data) <- c("x1", "x2", "class")
     }
@@ -46,7 +57,7 @@ lda2 <- function(value, data) {
         val[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
-            dev[[i]][j, ] <- val[[i]][j,] - mu[i,]
+            dev[[i]][j,] <- val[[i]][j, ] - mu[i, ]
         }
         mul[[i]] <- matrix(nrow = 2, ncol = 2)
         ccov[[i]] <- matrix(nrow = 2, ncol = 2)
@@ -59,16 +70,6 @@ lda2 <- function(value, data) {
     rownames(cov) <- c("x1", "x2")
     colnames(cov) <- c("x1", "x2")
     inv <- solve(cov)
-    for (i in (1:n_cla)) {
-        dis[i] <- t(value) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
-    }
-    prob <- c()
-    prob <- exp(dis) / sum(exp(dis))
-    names(dis) <- nam
-    class <- names(dis)[dis == max(dis)]
-    score <- max(dis)
-    proba <- max(prob)
-    out <- as.data.frame(cbind(class, score, proba))
     maxx <- matrix(nrow = n_cla, ncol = 2)
     minx <- matrix(nrow = n_cla, ncol = 2)
     for (i in (1:n_cla)) {
@@ -78,44 +79,56 @@ lda2 <- function(value, data) {
         }
     }
     col <- heat.colors(n = n_cla)
+    runifx1 <- runif(100000, min = min(minx[, 1]), max = max(maxx[, 1]))
+    runifx2 <- runif(100000, min = min(minx[, 2]), max = max(maxx[, 2]))
+    runif <- cbind(runifx1, runifx2)
+    dismc <- matrix(nrow = 100000, ncol = n_cla)
+    for (h in (1:100000)) {
+        for (i in (1:n_cla)) {
+            dismc[h, i] <-
+                t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+        }
+    }
+    colnames(dismc) <- nam
+    rownames(mu) <- nam
+    classmc <- c()
+    for (h in (1:100000)) {
+        classmc[h] <- names(dismc[h, ])[dismc[h, ] == max(dismc[h, ])]
+    }
+    dismc <-
+        data.frame(
+            x1 = runifx1,
+            x2 = runifx2,
+            class = classmc,
+            stringsAsFactors = FALSE
+        )
+    dismc <- dismc[order(dismc$class), ]
     plot(
-        X$x1[X$class == nam[1]],
-        X$x2[X$class == nam[1]],
-        xlim = c(min(minx[, 1]), max(maxx[, 1])),
-        ylim = c(min(minx[, 2]), max(maxx[, 2])),
+        dismc$x1[dismc$class == nam[1]],
+        dismc$x2[dismc$class == nam[1]],
+        xlim = c(min(minx[, 1]), max(maxx[, 1])), # x1
+        ylim = c(min(minx[, 2]), max(maxx[, 2])), # x2
         col = col[1],
         xlab = "X1",
-        ylab = "X2"
+        ylab = "X2",
+        pch = 20,
+        cex = 0.5
     )
     for (i in (2:n_cla)) {
-        points(X$x1[X$class == nam[i]],
-               X$x2[X$class == nam[i]],
-               col = col[i])
+        points(dismc$x1[dismc$class == nam[i]],
+               dismc$x2[dismc$class == nam[i]],
+               col = col[i],
+               pch = 20,
+               cex = 0.5)
     }
-    orth <- list()
-    for (i in (1:n_cla)) {
-        points(mu[i, 1], mu[i, 2], pch = 19)
-        for (k in (1:n_cla)) {
-            points(0.5 * (mu[i, 1] + mu[k, 1]), 0.5 * (mu[i, 2] + mu[k, 2]), pch = 19)
-            orth[[i + k - 1]] <- c() # does this indexing work for >3 classes (empty elements?)
-            orth[[i + k - 1]] <- inv %*% (mu[i,] - mu[k,])
-        }
-    }
-    orth[[1]] <- NULL
-    orth[[0.5 * n_cla * (n_cla - 1) + 1]] <- NULL # we have n(n-1)/2 segments between n points and n(n-1)/2+2 vectors in orth
-    slope <- c()
-    for (i in (1:(0.5 * n_cla * (n_cla - 1)))) {
-        slope[i] <- -orth[[i]][1, ] / orth[[i]][2, ]
-    }
-    interc <- matrix(nrow = n_cla, ncol = n_cla)
-    for (i in (1:n_cla)) {
-        for (k in (i:n_cla)) {
-            interc[i,k] <- -(slope[i] * 0.5 * (mu[i, 1] + mu[k, 1]) - 0.5 * (mu[i, 2] + mu[k, 2])) # intercept wil have to be double indexed (matrix, because of combinatorics)
-        }
-    }
-    abline(b = slope[2],
-           a = interc[3,3]) # [1,2], [2,3], [3,2] are the correct intercepts for three classes
-    return(list(pi, cov, out, slope, interc))
+    return(list(pi, cov))
 }
-lda2(c(-2, 5), X)
-abline(a = 7.2, b = 0.835)
+lda2(X)
+# slope of line as tangent of its angle: linear angle increase 
+# (90 on both sides of the average line - or of the inverse covariance matrix * average line?)
+# from 90, find class opposite and increase angle until 
+
+# OR (simpler algorithm) :
+# branch out with two lines from the origin at 10 degrees (less?) on each side of average line and at 3/4 distance and
+# retreat until function classifies to the original class (you have two points on the boundary so you have a boundary)
+# THEN glide along this boundary until find new class - how far? how can you bound the search (to one side?)
