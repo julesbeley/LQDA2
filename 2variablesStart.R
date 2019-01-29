@@ -1,7 +1,7 @@
 X0 <-
     data.frame(
-        x1 = rnorm(200, mean = -10, sd = 1),
-        x2 = rnorm(200, mean = 0, sd = 1),
+        x1 = rnorm(400, mean = -12, sd = 1),
+        x2 = rnorm(400, mean = 7, sd = 1),
         class = "black"
     )
 X1 <-
@@ -18,16 +18,16 @@ X2 <-
     )
 X3 <- data.frame(
     x1 = rnorm(200, mean = -1, sd = 1),
-    x2 = rnorm(200, mean = 9, sd = 1),
+    x2 = rnorm(200, mean = -5, sd = 1),
     class = "orange"
 )
 X4 <- data.frame(
-    x1 = rnorm(200, mean = 2, sd = 1),
-    x2 = rnorm(200, mean = 12, sd = 1),
+    x1 = rnorm(300, mean = 2, sd = 1),
+    x2 = rnorm(300, mean = -2, sd = 1),
     class = "red"
 )
 X5 <- data.frame(
-    x1 = rnorm(200, mean = 5, sd = 1),
+    x1 = rnorm(200, mean = 10, sd = 1),
     x2 = rnorm(200, mean = 15, sd = 1),
     class = "blue"
 )
@@ -121,12 +121,24 @@ lda2 <- function(data) {
                pch = 20,
                cex = 0.5)
     }
-    return(list(pi, cov))
+    for (i in (1:n_cla)) {
+        points(mu[i,1], mu[i,2],
+               pch = )
+    }
+    for (i in (1:n_cla)) {
+        for (j in (i:n_cla)) {
+            segments(mu[i,1], mu[i,2], mu[j,1], mu[j,2])
+        }
+    }
+    return(list(pi, cov, mu))
 }
 lda2(X)
-# slope of line as tangent of its angle: linear angle increase 
-# (90 on both sides of the average line - or of the inverse covariance matrix * average line?)
-# from 90, find class opposite and increase angle until 
+# y = ax + b 
+# a = (yB - yA) / (xB - xA)
+# A c y so yA = aXA + b so
+# b = yA - aXA
+
+# if mean line doesn't cross right decision boundary, rotate slightly, if crosses two, chuck it
 
 # OR (simpler algorithm) :
 # branch out with two lines from the origin at 10 degrees (less?) on each side of average line and at 3/4 distance and
