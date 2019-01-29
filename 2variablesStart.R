@@ -116,7 +116,7 @@ lda2 <- function(data) {
     )
     for (i in (2:n_cla)) {
         points(dismc$x1[dismc$class == nam[i]],
-               dismc$x2[dismc$class == nam[i]],
+               dismc$x2[dismc$class == nam[i]], 
                col = col[i],
                pch = 20,
                cex = 0.5)
