@@ -138,31 +138,16 @@ lda2 <- function(data) {
     }
     dis <- as.data.frame(cbind(dis,classtest)) # scores and class for every point on the means line
     if (length(table(dis$classtest)) == 2) {
-        
+        for (j in (1:99)) {
+            if (dis$classtest[j] != dis$classtest[j+1]) {
+                threshold <- j
+            }
+        }
     }
-    return(list(pi, cov, mu, slopes, intercepts, dis))
+    bounds1 <- data.frame(x1 = xy[threshold,1], x2 = xy[threshold,2])
+    bounds2 <- data.frame(x1 = xy[threshold + 1,1], x2 = xy[threshold + 1,2])
+    bounds <- rbind(bounds1, bounds2)
+    rownames(bounds) <- NULL
+    return(list(pi, cov, mu, bounds))
 }
 lda2(X)
-# try for 3/4 classes and we'll see for more later
-# x goes from mu[i,1] to mu[j,1]
-# y goes from mu[i,2] to mu[j,2]
-# y = ax + b
-# a = (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1])
-# origin is (mu[i,1], mu[i,2]) y passes through origin
-# b = mu[i,2] - a * mu[i,1]
-# so y = (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1]) * x + mu[i,2] - (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1]) * mu[i,1]
-# 1,2(2), 1,3(3), 2,3(6)
-# 1,2(2), 1,3(3), 1,4(4), 2,3(6), 2,4(8), 3,4(12)
-# 1,2(2), 1,3(3), 1,4(4), 1,5(5), 2,3(6), 2,4(8), 2,5(10), 3,4(12), 3,5(15), 4,5(20)
-# 1,2(2), 1,3(3), 1,4(4), 1,5(5), 1,6(6), 2,3(6), 2,4(8), 2,5(10), 2,6(12), 3,4(12), 
-# y = ax + b 
-# a = (yB - yA) / (xB - xA)
-# A c y so yA = aXA + b so
-# b = yA - aXA
-
-# if mean line doesn't cross right decision boundary, rotate slightly, if crosses two, chuck it
-
-# OR (simpler algorithm) :
-# branch out with two lines from the origin at 10 degrees (less?) on each side of average line and at 3/4 distance and
-# retreat until function classifies to the original class (you have two points on the boundary so you have a boundary)
-# THEN glide along this boundary until find new class - how far? how can you bound the search (to one side?)
