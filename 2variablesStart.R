@@ -141,7 +141,7 @@ lda2 <- function(data) {
     return(list(pi, cov, mu, slopes, intercepts))
 }
 lda2(X)
-
+# try for 3/4 classes and we'll see for more later
 # x goes from mu[i,1] to mu[j,1]
 # y goes from mu[i,2] to mu[j,2]
 # y = ax + b
