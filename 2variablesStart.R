@@ -31,7 +31,12 @@ X5 <- data.frame(
     x2 = rnorm(200, mean = 15, sd = 1),
     class = "blue"
 )
-X <- rbind(X0,X1, X2, X3, X4, X5)
+X6 <- data.frame(
+    x1 = rnorm(300, mean = 12, sd = 1),
+    x2 = rnorm(300, mean = 2, sd = 1),
+    class = "yellow"
+)
+X <- rbind(X0,X1, X2, X3, X4, X5, X6)
 
 lda2 <- function(data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
@@ -125,14 +130,29 @@ lda2 <- function(data) {
         points(mu[i,1], mu[i,2],
                pch = )
     }
+    slopes <- matrix(nrow = n_cla, ncol = n_cla) # slope of mean lines between class i and j
+    intercepts <- matrix(nrow = n_cla, ncol = n_cla) # intercept of mean lines "
     for (i in (1:n_cla)) {
         for (j in (i:n_cla)) {
-            segments(mu[i,1], mu[i,2], mu[j,1], mu[j,2])
+            slopes[i,j] <- (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1])
+            intercepts[i,j] <- mu[i,2] - slopes[i,j] * mu[i,1]
         }
     }
-    return(list(pi, cov, mu))
+    return(list(pi, cov, mu, slopes, intercepts))
 }
 lda2(X)
+
+# x goes from mu[i,1] to mu[j,1]
+# y goes from mu[i,2] to mu[j,2]
+# y = ax + b
+# a = (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1])
+# origin is (mu[i,1], mu[i,2]) y passes through origin
+# b = mu[i,2] - a * mu[i,1]
+# so y = (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1]) * x + mu[i,2] - (mu[j,2] - mu[i,2]) / (mu[j,1] - mu[i,1]) * mu[i,1]
+# 1,2(2), 1,3(3), 2,3(6)
+# 1,2(2), 1,3(3), 1,4(4), 2,3(6), 2,4(8), 3,4(12)
+# 1,2(2), 1,3(3), 1,4(4), 1,5(5), 2,3(6), 2,4(8), 2,5(10), 3,4(12), 3,5(15), 4,5(20)
+# 1,2(2), 1,3(3), 1,4(4), 1,5(5), 1,6(6), 2,3(6), 2,4(8), 2,5(10), 2,6(12), 3,4(12), 
 # y = ax + b 
 # a = (yB - yA) / (xB - xA)
 # A c y so yA = aXA + b so
