@@ -21,22 +21,7 @@ X3 <- data.frame(
     x2 = rnorm(200, mean = -5, sd = 1),
     class = "orange"
 )
-X4 <- data.frame(
-    x1 = rnorm(300, mean = 2, sd = 1),
-    x2 = rnorm(300, mean = -2, sd = 1),
-    class = "red"
-)
-X5 <- data.frame(
-    x1 = rnorm(200, mean = 10, sd = 1),
-    x2 = rnorm(200, mean = 15, sd = 1),
-    class = "blue"
-)
-X6 <- data.frame(
-    x1 = rnorm(300, mean = 12, sd = 1),
-    x2 = rnorm(300, mean = 2, sd = 1),
-    class = "yellow"
-)
-X <- rbind(X0,X1, X2, X3, X4, X5, X6)
+X <- rbind(X0, X1, X2, X3)
 
 lda2 <- function(data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
@@ -138,7 +123,24 @@ lda2 <- function(data) {
             intercepts[i,j] <- mu[i,2] - slopes[i,j] * mu[i,1]
         }
     }
-    return(list(pi, cov, mu, slopes, intercepts))
+    x <- seq(mu[1,1], mu[2,1], length = 100)
+    y <- slopes[1,2] * x + intercepts[1,2]
+    xy <- cbind(x,y)
+    dis <- matrix(nrow = 100, ncol = n_cla)
+    for (j in (1:100)) {
+        for (i in (1:n_cla))
+            dis[j,i] <- t(xy[j,]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+    }
+    colnames(dis) <- nam
+    classtest <- c()
+    for (j in (1:100)) {
+        classtest[j] <- colnames(dis)[dis[j,] == max(dis[j,])]
+    }
+    dis <- as.data.frame(cbind(dis,classtest)) # scores and class for every point on the means line
+    if (length(table(dis$classtest)) == 2) {
+        
+    }
+    return(list(pi, cov, mu, slopes, intercepts, dis))
 }
 lda2(X)
 # try for 3/4 classes and we'll see for more later
