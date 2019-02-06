@@ -21,7 +21,7 @@ X3 <- data.frame(
     x2 = rnorm(200, mean = -5, sd = 1),
     class = "orange"
 )
-X <- rbind(X0, X1, X2, X3)
+X <- rbind(X0, X1, X2, X3) 
 
 lda2 <- function(data) {
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
