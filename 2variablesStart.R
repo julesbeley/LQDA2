@@ -1,33 +1,33 @@
 X1 <-
     data.frame(
-        x1 = rnorm(100, mean = runif(1,-10,10), sd = 1),
-        x2 = rnorm(100, mean = runif(1,-10,10), sd = 1),
+        x1 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
+        x2 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
         class = "black"
     )
 X2 <-
     data.frame(
-        x1 = rnorm(200, mean = runif(1,-10,10), sd = 1),
-        x2 = rnorm(200, mean = runif(1,-10,10), sd = 1),
+        x1 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
+        x2 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
         class = "blue"
     )
 X3 <- data.frame(
-    x1 = rnorm(200, mean = runif(1,-10,10), sd = 1),
-    x2 = rnorm(200, mean = runif(1,-10,10), sd = 1),
+    x1 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
     class = "orange"
 )
 X4 <- data.frame(
-    x1 = rnorm(500, mean = runif(1,-10,10), sd = 1),
-    x2 = rnorm(500, mean = runif(1,-10,10), sd = 1),
+    x1 = rnorm(500, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(500, mean = runif(1, -10, 10), sd = 1),
     class = "red"
 )
 X5 <- data.frame(
-    x1 = rnorm(600, mean = runif(1,-10,10), sd = 1),
-    x2 = rnorm(600, mean = runif(1,-10,10), sd = 1),
+    x1 = rnorm(600, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(600, mean = runif(1, -10, 10), sd = 1),
     class = "white"
 )
 X6 <- data.frame(
-    x1 = rnorm(800, mean = runif(1,-10,10), sd = 1),
-    x2 = rnorm(800, mean = runif(1,-10,10), sd = 1),
+    x1 = rnorm(800, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(800, mean = runif(1, -10, 10), sd = 1),
     class = "green"
 )
 X <- rbind(X1, X2, X3, X4, X5, X6)
@@ -86,12 +86,15 @@ lda2 <- function(data) {
         ylim = c(min(minx[, 2]), max(maxx[, 2])),
         col = col[1],
         xlab = "X1",
-        ylab = "X2"
+        ylab = "X2",
+        pch = 18
     )
+    title("Observations and predicted decision boundaries")
     for (i in (2:n_cla)) {
         points(X$x1[X$class == nam[i]],
                X$x2[X$class == nam[i]],
-               col = col[i])
+               col = col[i],
+               pch = 18)
     }
     runifx1 <-
         runif(200000,
@@ -99,8 +102,8 @@ lda2 <- function(data) {
               max = 1.2 * max(maxx[, 1]))
     runifx2 <-
         runif(200000,
-              min = 1.2 * min(minx[, 2]),
-              max = 1.2 * max(maxx[, 2]))
+              min = 1.3 * min(minx[, 2]),
+              max = 1.3 * max(maxx[, 2]))
     runif <- cbind(runifx1, runifx2)
     dismc <- matrix(nrow = 200000, ncol = n_cla)
     for (h in (1:200000)) {
@@ -123,18 +126,14 @@ lda2 <- function(data) {
             stringsAsFactors = FALSE
         )
     dismc <- dismc[order(dismc$class),]
-    for (i in (1:n_cla)) {
-        points(mu[i, 1], mu[i, 2])
-    }
     points <- list()
     hulls <- list()
     for (i in (1:n_cla)) {
         points[[i]] <- cbind(dismc$x1[dismc$class == nam[i]],
                              dismc$x2[dismc$class == nam[i]])
         hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
-        lines(hulls[[i]])
+        lines(hulls[[i]], lwd = 2)
     }
     return(list(pi, cov, mu))
 }
 lda2(X)
-rnorm
