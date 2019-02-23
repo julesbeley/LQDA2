@@ -132,7 +132,7 @@ lda2 <- function(data) {
         points[[i]] <- cbind(dismc$x1[dismc$class == nam[i]],
                              dismc$x2[dismc$class == nam[i]])
         hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
-        lines(hulls[[i]], lwd = 2)
+        lines(hulls[[i]], lwd = 1.5)
     }
     return(list(pi, cov, mu))
 }
