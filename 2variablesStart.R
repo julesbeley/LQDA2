@@ -1,14 +1,12 @@
-X1 <-
-    data.frame(
-        x1 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
-        x2 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
-        class = "black"
+X1 <- data.frame(
+    x1 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
+    class = "black"
     )
-X2 <-
-    data.frame(
-        x1 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
-        x2 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
-        class = "blue"
+X2 <- data.frame(
+    x1 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
+    x2 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
+    class = "blue"
     )
 X3 <- data.frame(
     x1 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
@@ -53,8 +51,7 @@ lda2 <- function(data) {
     ccov <- list()
     for (i in (1:n_cla)) {
         val[[i]] <- matrix(nrow = tab[i], ncol = 2)
-        val[[i]] <-
-            cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
+        val[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
             dev[[i]][j, ] <- val[[i]][j,] - mu[i,]
@@ -96,20 +93,17 @@ lda2 <- function(data) {
                col = col[i],
                pch = 18)
     }
-    runifx1 <-
-        runif(200000,
-              min = 1.2 * min(minx[, 1]),
-              max = 1.2 * max(maxx[, 1]))
-    runifx2 <-
-        runif(200000,
-              min = 1.3 * min(minx[, 2]),
-              max = 1.3 * max(maxx[, 2]))
+    runifx1 <- runif(200000,
+                     min = 1.2 * min(minx[, 1]),
+                     max = 1.2 * max(maxx[, 1]))
+    runifx2 <- runif(200000,
+                     min = 1.3 * min(minx[, 2]),
+                     max = 1.3 * max(maxx[, 2]))
     runif <- cbind(runifx1, runifx2)
     dismc <- matrix(nrow = 200000, ncol = n_cla)
     for (h in (1:200000)) {
         for (i in (1:n_cla)) {
-            dismc[h, i] <-
-                t(runif[h,]) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
+            dismc[h, i] <- t(runif[h,]) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
         }
     }
     colnames(dismc) <- nam
@@ -118,12 +112,11 @@ lda2 <- function(data) {
     for (h in (1:200000)) {
         classmc[h] <- names(dismc[h,])[dismc[h,] == max(dismc[h,])]
     }
-    dismc <-
-        data.frame(
-            x1 = runifx1,
-            x2 = runifx2,
-            class = classmc,
-            stringsAsFactors = FALSE
+    dismc <- data.frame(
+        x1 = runifx1, 
+        x2 = runifx2,
+        class = classmc,
+        stringsAsFactors = FALSE
         )
     dismc <- dismc[order(dismc$class),]
     points <- list()
