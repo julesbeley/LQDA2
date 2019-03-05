@@ -1,3 +1,5 @@
+#convert to ggplot2
+
 X1 <- data.frame(
     x1 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
     x2 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
