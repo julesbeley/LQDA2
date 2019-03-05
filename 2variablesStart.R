@@ -143,7 +143,7 @@ lda2 <- function(data) {
     print(g)
     return(list(pi, cov, mu, hulls[[1]][1,1] - hulls[[1]][2,1] < 0.05))
 }
-lda2(X)
+lda2(X) 
 
 
 # why the hell don't the hulls go all the way around????
