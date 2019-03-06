@@ -111,13 +111,10 @@ lda2 <- function(data) {
     if (all(pi %in% rep.int(pi[1], length(pi)))) {
         library(ggvoronoi)
         box <- data.frame(x1 = c(min(minx[, 1]),
-                                 max(maxx[, 1]),
-                                 max(maxx[, 1]),
+                                 rep.int(max(maxx[, 1]), 2),
                                  min(minx[, 1])),
-                          x2 = c(min(minx[, 2]),
-                                 min(minx[, 2]),
-                                 max(maxx[, 2]),
-                                 max(maxx[, 2])))
+                          x2 = c(rep.int(min(minx[, 2]), 2),
+                                 rep.int(max(maxx[, 2]), 2)))
         g + stat_voronoi(data = as.data.frame(mu),
                          aes(x = x1, y = x2),
                          geom = "path",
@@ -131,15 +128,13 @@ lda2 <- function(data) {
                              dismc$x2[dismc$class %in% nam[i]])
         hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
         as.data.frame(hulls[[i]]) -> hulls[[i]]
+        g + geom_path(data = hulls[[i]],
+                      aes(x = V1, y = V2),
+                      size = 1,
+                      col = "grey30") -> g 
         }
-        for (i in (1:n_cla)) {
-            g + geom_path(data = hulls[[i]],
-                          aes(x = V1, y = V2),
-                          size = 1,
-                          col = "grey30") -> g 
-            }
-        }
-    suppressWarnings(print(g))
+    }
+    print(g)
     return(list(pi, cov, mu))
 }
 lda2(X)  
