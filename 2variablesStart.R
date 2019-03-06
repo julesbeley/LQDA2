@@ -134,9 +134,8 @@ lda2 <- function(data) {
         as.data.frame(hulls[[i]]) -> hulls[[i]]
     }
     for (i in (1:n_cla)) {
-        
         g + geom_point(data = hulls[[i]], aes(x = V1, y = V2)) +
-            geom_polygon(data = hulls[[i]], aes(x = V1, y = V2), fill = NA) -> g
+            geom_path(data = hulls[[i]], aes(x = V1, y = V2)) -> g
     }
     print(g)
     return(list(pi, cov, mu, hulls))
@@ -148,8 +147,6 @@ for (j in (seq(1, dim(hulls[[i]])[1] - 1))) {
         hulls[[i]][j,] <- c(mean(hulls[[i]][j, 1], hulls[[i]][j + 1, 1]), 
                             mean(hulls[[i]][j, 2], hulls[[i]][j + 1, 2]))
 }}
-
-# cluster hull vertices
 
 
 # to test if priors are equal before applying ggvoronoi
