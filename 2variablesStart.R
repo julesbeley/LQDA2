@@ -1,5 +1,5 @@
-# convert to ggplot2
 # create classifying function inside lda function 
+# create simpler random dataset generator
 # generate random points on the fringes of the normal distribution
 # develop qda function
 
@@ -38,7 +38,6 @@ X <- rbind(X1, X2, X3, X4, X5, X6)
 lda2 <- function(data) {
     library(ggplot2)
     library(dplyr)
-    library(sf)
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
         names(data) <- c("x1", "x2", "class")
     }
@@ -84,21 +83,6 @@ lda2 <- function(data) {
         }
     }
     col <- heat.colors(n = n_cla, alpha = 0.7)
-    ggplot() + 
-        geom_point(data = subset(data, class %in% nam[1]),
-                   aes(x = x1, y = x2),
-                   col = col[1]) +
-        scale_x_continuous(limits = c(min(minx[, 1]), max(maxx[, 1]))) +
-        scale_y_continuous(limits = c(min(minx[, 2]), max(maxx[, 2]))) +
-        xlab("X1") +
-        ylab("X2") +
-        labs(title = "Observations and predicted decision boundaries") -> g
-    for (i in (2:n_cla)) {
-        g + geom_point(data = subset(data, class %in% nam[i]),
-                       aes(x = x1, y = x2),
-                       col = col[i]) + 
-            theme(plot.title = element_text(hjust = 0.5)) -> g
-    }
     runifx1 <- runif(200000,
                      min = min(minx[, 1]),
                      max = max(maxx[, 1]))
@@ -133,20 +117,53 @@ lda2 <- function(data) {
         hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
         as.data.frame(hulls[[i]]) -> hulls[[i]]
     }
-    for (i in (1:n_cla)) {
-        g + geom_point(data = hulls[[i]], aes(x = V1, y = V2)) +
-            geom_path(data = hulls[[i]], aes(x = V1, y = V2)) -> g
+    ggplot() + 
+        geom_point(data = subset(data, class %in% nam[1]),
+                   aes(x = x1, y = x2),
+                   col = col[1]) +
+        scale_x_continuous(limits = c(1.1 * min(minx[, 1]), 1.1 * max(maxx[, 1]))) +
+        scale_y_continuous(limits = c(1.1 * min(minx[, 2]), 1.1 * max(maxx[, 2]))) +
+        xlab("X1") +
+        ylab("X2") +
+        labs(title = "Observations and predicted decision boundaries") -> g
+    for (i in (2:n_cla)) {
+        g + geom_point(data = subset(data, class %in% nam[i]),
+                       aes(x = x1, y = x2),
+                       col = col[i],
+                       alpha = 0.4) + 
+            theme(plot.title = element_text(hjust = 0.5),
+                  panel.background = element_blank()) -> g
     }
-    print(g)
-    return(list(pi, cov, mu, hulls))
+    for (i in (1:n_cla)) {
+        for (j in (seq(1, dim(hulls[[i]])[1]))) {
+            if ((!(is.na(abs(hulls[[i]][j, 1])))) &&
+                (abs(hulls[[i]][j, 1] - max(maxx[, 1])) < 0.05) ||
+                (abs(hulls[[i]][j, 1] - min(minx[, 1])) < 0.05) ||
+                (abs(hulls[[i]][j, 2] - max(maxx[, 2])) < 0.05) ||
+                (abs(hulls[[i]][j, 2] - min(minx[, 2])) < 0.05)) {
+                hulls[[i]][j, ] <- c(NA, NA)
+            }
+        }
+        g + geom_path(data = hulls[[i]],
+                      aes(x = V1, y = V2),
+                      size = 1,
+                      col = "grey30") -> g 
+    }
+    suppressWarnings(print(g))
+    return(list(pi, cov, mu))
 }
 lda2(X)  
 
+# attempt at simplifying hulls (deprecated)
 for (j in (seq(1, dim(hulls[[i]])[1] - 1))) {
-    if (abs(hulls[[i]][j, 1] - hulls[[i]][j + 1, 1]) < 0.1) {
-        hulls[[i]][j,] <- c(mean(hulls[[i]][j, 1], hulls[[i]][j + 1, 1]), 
-                            mean(hulls[[i]][j, 2], hulls[[i]][j + 1, 2]))
-}}
+    if ((abs(hulls[[i]][j, 1] - hulls[[i]][j + 1, 1]) < 1) && 
+        (abs(hulls[[i]][j, 2] - hulls[[i]][j + 1, 2]) < 1) &&
+        !(is.na(abs(hulls[[i]][j, 1])))) {
+        hulls[[i]][j, ] <- c(mean(hulls[[i]][j, 1], hulls[[i]][j + 1, 1]), 
+                             mean(hulls[[i]][j, 2], hulls[[i]][j + 1, 2]))
+        hulls[[i]][j + 1, ] <- c(NA, NA)
+    }
+}
 
 
 # to test if priors are equal before applying ggvoronoi
