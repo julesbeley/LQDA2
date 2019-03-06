@@ -18,7 +18,7 @@ do.call("rbind", Xlist) -> X
 lda2 <- function(data) {
     library(ggplot2)
     library(dplyr)
-    if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
+    if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
         names(data) <- c("x1", "x2", "class")
     }
     tab <- table(data$class)
@@ -28,8 +28,8 @@ lda2 <- function(data) {
     mu <- matrix(nrow = n_cla, ncol = 2)
     for (i in (1:n_cla)) {
         pi[i] <- tab[i] / dim(data)[1]
-        mu[i, 1] <- mean(data$x1[data$class == nam[i]]) 
-        mu[i, 2] <- mean(data$x2[data$class == nam[i]])
+        mu[i, 1] <- mean(data$x1[data$class %in% nam[i]]) 
+        mu[i, 2] <- mean(data$x2[data$class %in% nam[i]])
     }
     names(pi) <- nam
     val <- list()
@@ -38,7 +38,7 @@ lda2 <- function(data) {
     ccov <- list()
     for (i in (1:n_cla)) {
         val[[i]] <- matrix(nrow = tab[i], ncol = 2)
-        val[[i]] <- cbind(data$x1[data$class == nam[i]], data$x2[data$class == nam[i]])
+        val[[i]] <- cbind(data$x1[data$class %in% nam[i]], data$x2[data$class %in% nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
             dev[[i]][j, ] <- val[[i]][j,] - mu[i,]
@@ -80,7 +80,7 @@ lda2 <- function(data) {
     rownames(mu) <- nam
     classmc <- c()
     for (h in (1:200000)) {
-        classmc[h] <- names(dismc[h,])[dismc[h,] == max(dismc[h,])]
+        classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
     }
     dismc <- data.frame(
         x1 = runifx1, 
@@ -92,8 +92,8 @@ lda2 <- function(data) {
     points <- list()
     hulls <- list()
     for (i in (1:n_cla)) {
-        points[[i]] <- cbind(dismc$x1[dismc$class == nam[i]],
-                             dismc$x2[dismc$class == nam[i]])
+        points[[i]] <- cbind(dismc$x1[dismc$class %in% nam[i]],
+                             dismc$x2[dismc$class %in% nam[i]])
         hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
         as.data.frame(hulls[[i]]) -> hulls[[i]]
     }
@@ -139,7 +139,7 @@ x <- rep.int(10, 10)
 x2 <- c(1, 2, 1, 1, 1, 10, 10)
 x2 == rep.int(x2[1], length(x2))
 test <- function(vector) {
-    if (all(vector == rep.int(vector[1], length(vector)))) {
+    if (all(vector %in% rep.int(vector[1], length(vector)))) {
         print("same")
     }
     else {
