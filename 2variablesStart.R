@@ -38,6 +38,7 @@ X <- rbind(X1, X2, X3, X4, X5, X6)
 lda2 <- function(data) {
     library(ggplot2)
     library(dplyr)
+    library(sf)
     if (is.numeric(data[, 1] & is.numeric(data[, 2]))) {
         names(data) <- c("x1", "x2", "class")
     }
@@ -99,11 +100,11 @@ lda2 <- function(data) {
             theme(plot.title = element_text(hjust = 0.5)) -> g
     }
     runifx1 <- runif(200000,
-                     min = 1.2 * min(minx[, 1]),
-                     max = 1.2 * max(maxx[, 1]))
+                     min = min(minx[, 1]),
+                     max = max(maxx[, 1]))
     runifx2 <- runif(200000,
-                     min = 1.3 * min(minx[, 2]),
-                     max = 1.3 * max(maxx[, 2]))
+                     min = min(minx[, 2]),
+                     max = max(maxx[, 2]))
     runif <- cbind(runifx1, runifx2)
     dismc <- matrix(nrow = 200000, ncol = n_cla)
     for (h in (1:200000)) {
@@ -129,24 +130,27 @@ lda2 <- function(data) {
     for (i in (1:n_cla)) {
         points[[i]] <- cbind(dismc$x1[dismc$class == nam[i]],
                              dismc$x2[dismc$class == nam[i]])
-        hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 5)
+        hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
         as.data.frame(hulls[[i]]) -> hulls[[i]]
     }
     for (i in (1:n_cla)) {
-        for (j in (seq(1, dim(hulls[[i]])[1] - 1))) {
-            if (abs(hulls[[i]][j, 1] - hulls[[i]][j + 1, 1]) < 0.02) {
-                hulls[[i]][j,] <- c(NA, NA)
-            }}
+        
         g + geom_point(data = hulls[[i]], aes(x = V1, y = V2)) +
-            geom_path(data = hulls[[i]], aes(x = V1, y = V2)) -> g
+            geom_polygon(data = hulls[[i]], aes(x = V1, y = V2), fill = NA) -> g
     }
     print(g)
-    return(list(pi, cov, mu, hulls[[1]][1,1] - hulls[[1]][2,1] < 0.05))
+    return(list(pi, cov, mu, hulls))
 }
 lda2(X)  
 
+for (j in (seq(1, dim(hulls[[i]])[1] - 1))) {
+    if (abs(hulls[[i]][j, 1] - hulls[[i]][j + 1, 1]) < 0.1) {
+        hulls[[i]][j,] <- c(mean(hulls[[i]][j, 1], hulls[[i]][j + 1, 1]), 
+                            mean(hulls[[i]][j, 2], hulls[[i]][j + 1, 2]))
+}}
 
-# why the hell don't the hulls go all the way around????
+# cluster hull vertices
+
 
 # to test if priors are equal before applying ggvoronoi
 x <- rep.int(10, 10)
@@ -161,5 +165,3 @@ test <- function(vector) {
     }
 }
 test(x2)
-
-# "inverse" of a normal distribution to generate points far from centroid
