@@ -1,39 +1,19 @@
 # create classifying function inside lda function 
-# create simpler random dataset generator
 # generate random points on the fringes of the normal distribution
 # develop qda function
 
-X1 <- data.frame(
-    x1 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(100, mean = runif(1, -10, 10), sd = 1),
-    class = "black"
+rm(list = ls())
+Xlist <- list()
+classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "brown")
+length <- runif(8, 100, 500)
+for (i in (1:runif(1, 3, 8))) {
+    Xlist[[i]] <- data.frame(
+        x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = 1),
+        x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = 1),
+        class = classnames[i]
     )
-X2 <- data.frame(
-    x1 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(200, mean = runif(1, -10, 10), sd = 1),
-    class = "blue"
-    )
-X3 <- data.frame(
-    x1 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
-    class = "orange"
-)
-X4 <- data.frame(
-    x1 = rnorm(500, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(500, mean = runif(1, -10, 10), sd = 1),
-    class = "red"
-)
-X5 <- data.frame(
-    x1 = rnorm(600, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(600, mean = runif(1, -10, 10), sd = 1),
-    class = "white"
-)
-X6 <- data.frame(
-    x1 = rnorm(800, mean = runif(1, -10, 10), sd = 1),
-    x2 = rnorm(800, mean = runif(1, -10, 10), sd = 1),
-    class = "green"
-)
-X <- rbind(X1, X2, X3, X4, X5, X6)
+}
+do.call("rbind", Xlist) -> X
 
 lda2 <- function(data) {
     library(ggplot2)
@@ -153,18 +133,6 @@ lda2 <- function(data) {
     return(list(pi, cov, mu))
 }
 lda2(X)  
-
-# attempt at simplifying hulls (deprecated)
-for (j in (seq(1, dim(hulls[[i]])[1] - 1))) {
-    if ((abs(hulls[[i]][j, 1] - hulls[[i]][j + 1, 1]) < 1) && 
-        (abs(hulls[[i]][j, 2] - hulls[[i]][j + 1, 2]) < 1) &&
-        !(is.na(abs(hulls[[i]][j, 1])))) {
-        hulls[[i]][j, ] <- c(mean(hulls[[i]][j, 1], hulls[[i]][j + 1, 1]), 
-                             mean(hulls[[i]][j, 2], hulls[[i]][j + 1, 2]))
-        hulls[[i]][j + 1, ] <- c(NA, NA)
-    }
-}
-
 
 # to test if priors are equal before applying ggvoronoi
 x <- rep.int(10, 10)
