@@ -1,4 +1,4 @@
-# generate random points on the fringes of the normal distribution
+# generate random points on the fringes of the normal distribution + near bounding box
 # develop qda function
 
 rm(list = ls())
@@ -14,7 +14,7 @@ for (i in (1:runif(1, 3, 8))) {
 }
 do.call("rbind", Xlist) -> X
 
-lda2 <- function(data) {
+lda2 <- function(data, nmc = 200000, palette = heat.colors, ...) {
     library(ggplot2)
     library(dplyr)
     if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
@@ -32,7 +32,7 @@ lda2 <- function(data) {
     }
     names(pi) <- nam
     colnames(mu) <- c("x1", "x2")
-    col <- heat.colors(n = n_cla, alpha = 0.7)
+    col <- palette(n = n_cla, alpha = 0.7)
     val <- list()
     dev <- list()
     mul <- list()
@@ -63,15 +63,15 @@ lda2 <- function(data) {
             minx[i, j] <- mu[i, j] - 4 * sqrt(cov[j, j])
         }
     }
-    runifx1 <- runif(200000,
+    runifx1 <- runif(nmc,
                      min = min(minx[, 1]),
                      max = max(maxx[, 1]))
-    runifx2 <- runif(200000,
+    runifx2 <- runif(nmc,
                      min = min(minx[, 2]),
                      max = max(maxx[, 2]))
     runif <- cbind(runifx1, runifx2)
-    dismc <- matrix(nrow = 200000, ncol = n_cla)
-    for (h in (1:200000)) {
+    dismc <- matrix(nrow = nmc, ncol = n_cla)
+    for (h in (1:nmc)) {
         for (i in (1:n_cla)) {
             dismc[h, i] <- t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
         }
@@ -79,7 +79,7 @@ lda2 <- function(data) {
     colnames(dismc) <- nam
     rownames(mu) <- nam
     classmc <- c()
-    for (h in (1:200000)) {
+    for (h in (1:nmc)) {
         classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
     }
     dismc <- data.frame(
@@ -106,7 +106,8 @@ lda2 <- function(data) {
                        col = col[i],
                        alpha = 0.4) + 
             theme(plot.title = element_text(hjust = 0.5),
-                  panel.background = element_blank()) -> g
+                  panel.background = element_blank(),
+                  ...) -> g
     }
     if (all(pi %in% rep.int(pi[1], length(pi)))) {
         library(ggvoronoi)
@@ -135,6 +136,12 @@ lda2 <- function(data) {
         }
     }
     print(g)
-    return(list(pi, cov, mu))
+    list(pi, cov, mu) -> out
+    names(out) <- c("Prior probabilities", 
+                    "Covariance matrix", 
+                    "Class means")
+    return(out)
 }
-lda2(X)  
+
+lda2(data = X, nmc = 200000, palette = heat.colors)
+
