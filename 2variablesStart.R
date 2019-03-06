@@ -1,4 +1,3 @@
-# create classifying function inside lda function 
 # generate random points on the fringes of the normal distribution
 # develop qda function
 
@@ -32,6 +31,8 @@ lda2 <- function(data) {
         mu[i, 2] <- mean(data$x2[data$class %in% nam[i]])
     }
     names(pi) <- nam
+    colnames(mu) <- c("x1", "x2")
+    col <- heat.colors(n = n_cla, alpha = 0.7)
     val <- list()
     dev <- list()
     mul <- list()
@@ -62,7 +63,6 @@ lda2 <- function(data) {
             minx[i, j] <- mu[i, j] - 4 * sqrt(cov[j, j])
         }
     }
-    col <- heat.colors(n = n_cla, alpha = 0.7)
     runifx1 <- runif(200000,
                      min = min(minx[, 1]),
                      max = max(maxx[, 1]))
@@ -91,12 +91,6 @@ lda2 <- function(data) {
     dismc <- dismc[order(dismc$class), ]
     points <- list()
     hulls <- list()
-    for (i in (1:n_cla)) {
-        points[[i]] <- cbind(dismc$x1[dismc$class %in% nam[i]],
-                             dismc$x2[dismc$class %in% nam[i]])
-        hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
-        as.data.frame(hulls[[i]]) -> hulls[[i]]
-    }
     ggplot() + 
         geom_point(data = subset(data, class %in% nam[1]),
                    aes(x = x1, y = x2),
@@ -114,36 +108,38 @@ lda2 <- function(data) {
             theme(plot.title = element_text(hjust = 0.5),
                   panel.background = element_blank()) -> g
     }
-    for (i in (1:n_cla)) {
-        for (j in (seq(1, dim(hulls[[i]])[1]))) {
-            if ((!(is.na(abs(hulls[[i]][j, 1])))) &&
-                (abs(hulls[[i]][j, 1] - max(maxx[, 1])) < 0.05) ||
-                (abs(hulls[[i]][j, 1] - min(minx[, 1])) < 0.05) ||
-                (abs(hulls[[i]][j, 2] - max(maxx[, 2])) < 0.05) ||
-                (abs(hulls[[i]][j, 2] - min(minx[, 2])) < 0.05)) {
-                hulls[[i]][j, ] <- c(NA, NA)
+    if (all(pi %in% rep.int(pi[1], length(pi)))) {
+        library(ggvoronoi)
+        box <- data.frame(x1 = c(min(minx[, 1]),
+                                 max(maxx[, 1]),
+                                 max(maxx[, 1]),
+                                 min(minx[, 1])),
+                          x2 = c(min(minx[, 2]),
+                                 min(minx[, 2]),
+                                 max(maxx[, 2]),
+                                 max(maxx[, 2])))
+        g + stat_voronoi(data = as.data.frame(mu),
+                         aes(x = x1, y = x2),
+                         geom = "path",
+                         outline = box,
+                         size = 1,
+                         col = "grey30") -> g
+    }
+    else { 
+        for (i in (1:n_cla)) {
+        points[[i]] <- cbind(dismc$x1[dismc$class %in% nam[i]],
+                             dismc$x2[dismc$class %in% nam[i]])
+        hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
+        as.data.frame(hulls[[i]]) -> hulls[[i]]
+        }
+        for (i in (1:n_cla)) {
+            g + geom_path(data = hulls[[i]],
+                          aes(x = V1, y = V2),
+                          size = 1,
+                          col = "grey30") -> g 
             }
         }
-        g + geom_path(data = hulls[[i]],
-                      aes(x = V1, y = V2),
-                      size = 1,
-                      col = "grey30") -> g 
-    }
     suppressWarnings(print(g))
     return(list(pi, cov, mu))
 }
 lda2(X)  
-
-# to test if priors are equal before applying ggvoronoi
-x <- rep.int(10, 10)
-x2 <- c(1, 2, 1, 1, 1, 10, 10)
-x2 == rep.int(x2[1], length(x2))
-test <- function(vector) {
-    if (all(vector %in% rep.int(vector[1], length(vector)))) {
-        print("same")
-    }
-    else {
-        print("different")
-    }
-}
-test(x2)
