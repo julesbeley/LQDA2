@@ -7,8 +7,8 @@ classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "b
 length <- runif(8, 100, 500)
 for (i in (1:runif(1, 3, 8))) {
     Xlist[[i]] <- data.frame(
-        x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = 1),
-        x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = 1),
+        x1 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
+        x2 = rnorm(2000, mean = runif(1, -10, 10), sd = 1),
         class = classnames[i]
     )
 }
@@ -52,6 +52,7 @@ lda2 <- function(data, nmc = 200000, palette = heat.colors, ...) {
     dis <- c()
     exp <- c()
     cov <- Reduce('+', ccov)
+    rm(val, dev, mul, ccov)
     rownames(cov) <- c("x1", "x2")
     colnames(cov) <- c("x1", "x2")
     inv <- solve(cov)
@@ -63,40 +64,12 @@ lda2 <- function(data, nmc = 200000, palette = heat.colors, ...) {
             minx[i, j] <- mu[i, j] - 4 * sqrt(cov[j, j])
         }
     }
-    runifx1 <- runif(nmc,
-                     min = min(minx[, 1]),
-                     max = max(maxx[, 1]))
-    runifx2 <- runif(nmc,
-                     min = min(minx[, 2]),
-                     max = max(maxx[, 2]))
-    runif <- cbind(runifx1, runifx2)
-    dismc <- matrix(nrow = nmc, ncol = n_cla)
-    for (h in (1:nmc)) {
-        for (i in (1:n_cla)) {
-            dismc[h, i] <- t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
-        }
-    }
-    colnames(dismc) <- nam
-    rownames(mu) <- nam
-    classmc <- c()
-    for (h in (1:nmc)) {
-        classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
-    }
-    dismc <- data.frame(
-        x1 = runifx1, 
-        x2 = runifx2,
-        class = classmc,
-        stringsAsFactors = FALSE
-        )
-    dismc <- dismc[order(dismc$class), ]
-    points <- list()
-    hulls <- list()
     ggplot() + 
         geom_point(data = subset(data, class %in% nam[1]),
                    aes(x = x1, y = x2),
                    col = col[1]) +
-        scale_x_continuous(limits = c(1.1 * min(minx[, 1]), 1.1 * max(maxx[, 1]))) +
-        scale_y_continuous(limits = c(1.1 * min(minx[, 2]), 1.1 * max(maxx[, 2]))) +
+        scale_x_continuous(limits = c(1.12 * min(minx[, 1]), 1.12 * max(maxx[, 1]))) +
+        scale_y_continuous(limits = c(1.12 * min(minx[, 2]), 1.12 * max(maxx[, 2]))) +
         xlab("X1") +
         ylab("X2") +
         labs(title = "Observations and predicted decision boundaries") -> g
@@ -122,17 +95,47 @@ lda2 <- function(data, nmc = 200000, palette = heat.colors, ...) {
                          outline = box,
                          size = 1,
                          col = "grey30") -> g
+        rm(minx, maxx)
     }
     else { 
+        runifx1 <- runif(nmc,
+                         min = min(minx[, 1]),
+                         max = max(maxx[, 1]))
+        runifx2 <- runif(nmc,
+                         min = min(minx[, 2]),
+                         max = max(maxx[, 2]))
+        runif <- cbind(runifx1, runifx2)
+        dismc <- matrix(nrow = nmc, ncol = n_cla)
+        for (h in (1:nmc)) {
+            for (i in (1:n_cla)) {
+                dismc[h, i] <- t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+            }
+        }
+        colnames(dismc) <- nam
+        rownames(mu) <- nam
+        classmc <- c()
+        for (h in (1:nmc)) {
+            classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
+        }
+        dismc <- data.frame(
+            x1 = runifx1, 
+            x2 = runifx2,
+            class = classmc,
+            stringsAsFactors = FALSE
+        )
+        rm(runifx1, runifx2)
+        dismc <- dismc[order(dismc$class), ]
+        points <- list()
+        hulls <- list()
         for (i in (1:n_cla)) {
-        points[[i]] <- cbind(dismc$x1[dismc$class %in% nam[i]],
-                             dismc$x2[dismc$class %in% nam[i]])
-        hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
-        as.data.frame(hulls[[i]]) -> hulls[[i]]
-        g + geom_path(data = hulls[[i]],
-                      aes(x = V1, y = V2),
-                      size = 1,
-                      col = "grey30") -> g 
+            points[[i]] <- cbind(dismc$x1[dismc$class %in% nam[i]],
+                                 dismc$x2[dismc$class %in% nam[i]])
+            hulls[[i]] <- concaveman::concaveman(points[[i]], concavity = 10e20)
+            as.data.frame(hulls[[i]]) -> hulls[[i]]
+            g + geom_path(data = hulls[[i]],
+                        aes(x = V1, y = V2),
+                        size = 1,
+                        col = "grey30") -> g 
         }
     }
     print(g)
@@ -143,5 +146,4 @@ lda2 <- function(data, nmc = 200000, palette = heat.colors, ...) {
     return(out)
 }
 
-lda2(data = X, nmc = 200000, palette = heat.colors)
-
+lda2(data = X, nmc = 500000)
