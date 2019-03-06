@@ -41,7 +41,7 @@ lda2 <- function(data) {
         val[[i]] <- cbind(data$x1[data$class %in% nam[i]], data$x2[data$class %in% nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
-            dev[[i]][j, ] <- val[[i]][j,] - mu[i,]
+            dev[[i]][j, ] <- val[[i]][j, ] - mu[i, ]
         }
         mul[[i]] <- matrix(nrow = 2, ncol = 2)
         ccov[[i]] <- matrix(nrow = 2, ncol = 2)
@@ -73,7 +73,7 @@ lda2 <- function(data) {
     dismc <- matrix(nrow = 200000, ncol = n_cla)
     for (h in (1:200000)) {
         for (i in (1:n_cla)) {
-            dismc[h, i] <- t(runif[h,]) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
+            dismc[h, i] <- t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
         }
     }
     colnames(dismc) <- nam
@@ -88,7 +88,7 @@ lda2 <- function(data) {
         class = classmc,
         stringsAsFactors = FALSE
         )
-    dismc <- dismc[order(dismc$class),]
+    dismc <- dismc[order(dismc$class), ]
     points <- list()
     hulls <- list()
     for (i in (1:n_cla)) {
