@@ -1,6 +1,4 @@
-# generate random points on the fringes of the normal distribution + near bounding box
-# points still somtimes fall outside of bb
-# concaveman JavaScript V8 TypeError
+# GENERATE RANDOM POINTS FURTHER THAN BOUNDARY WITH FEWER RANDOM POINTS!!!!!!!
 # separate graphical part from computation of decision boundary path
 # develop qda function
 
@@ -19,7 +17,6 @@ do.call("rbind", Xlist) -> X
 
 lda2 <- function(data, nmc = 250000, palette = heat.colors, ...) {
     library(ggplot2)
-    library(dplyr)
     if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
         names(data) <- c("x1", "x2", "class")
     }
@@ -130,8 +127,8 @@ lda2 <- function(data, nmc = 250000, palette = heat.colors, ...) {
         for (i in (1:n_cla)) {
             hulls[[i]] <- as.data.frame(
                 concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
-                                             dismc$x2[dismc$class %in% nam[i]]), 
-                                       concavity = 10e20)
+                                             dismc$x2[dismc$class %in% nam[i]]),
+                                       concavity = 50)
                 )
             g + geom_path(data = hulls[[i]],
                         aes(x = V1, y = V2),
@@ -147,4 +144,24 @@ lda2 <- function(data, nmc = 250000, palette = heat.colors, ...) {
     return(out)
 }
 
-lda2(X, nmc = 1000000)
+# gif test
+
+for (i in seq(from = 50, to = 10050, by = 100)) {
+    png(print(paste("./plot", i , ".png", sep = "")))
+    lda2(X, nmc = i)
+    dev.off()
+}
+
+# sampling in area outside of a polygon!
+
+library(sp)
+library(rgeos)
+cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)) -> pol
+cbind(c(0, 5, 5, 0, 0), c(0, 0, 5, 5, 0)) -> pol2
+sps <- SpatialPolygons(list(Polygons(list(Polygon(pol)), 1)))
+sps2 <- SpatialPolygons(list(Polygons(list(Polygon(pol2)), 1)))
+plot(sps)
+gDifference(sps2, sps) -> diff
+plot(diff)
+spsample(diff, n = 20, "random")
+plot(concaveman(spsample(diff, n = 20, "random")))
