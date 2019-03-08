@@ -165,3 +165,7 @@ gDifference(sps2, sps) -> diff
 plot(diff)
 spsample(diff, n = 20, "random")
 plot(concaveman(spsample(diff, n = 20, "random")))
+
+# convert back to data.frame for testing
+sps@polygons[[1]]@Polygons[[1]]@coords -> d
+as.data.frame(d)
