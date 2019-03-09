@@ -1,4 +1,4 @@
-# separate graphical part from computation of decision boundary path
+# lapply instead of for?
 # develop qda function
 
 rm(list = ls())
@@ -108,10 +108,14 @@ lda2 <- function(data, k = 3) {
         box <- mtosp(box)
         hulls <- list()
         for (i in (1:n_cla)) {
-            hulls[[i]] <- as.data.frame(
-                concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
-                                             dismc$x2[dismc$class %in% nam[i]]),
-                                       concavity = 50))
+            while(TRUE) {
+                try(hulls[[i]] <- as.data.frame(
+                    concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
+                                                 dismc$x2[dismc$class %in% nam[i]]),
+                                           concavity = 50)),
+                    silent = TRUE)
+                if(!is(hulls[[i]], "try-error")) break
+            }
             hulls[[i]] <- mtosp(hulls[[i]])
         }
         for (j in (1:k)) {
@@ -143,10 +147,14 @@ lda2 <- function(data, k = 3) {
             ) 
             dismc2 <- dismc2[order(dismc2$class), ]
             for (i in (1:n_cla)) {
-                hulls[[i]] <- as.data.frame(
-                    concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
-                                                 dismc2$x2[dismc2$class %in% nam[i]]),
-                                           concavity = 50))
+                while(TRUE) {
+                    try(hulls[[i]] <- as.data.frame(
+                        concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
+                                                     dismc2$x2[dismc2$class %in% nam[i]]),
+                                               concavity = 50)),
+                        silent = TRUE)
+                    if(!is(hulls[[i]], "try-error")) break
+                }
                 names(hulls[[i]]) <- c("x1", "x2")
             }
             rm(dismc2)
@@ -159,5 +167,6 @@ lda2 <- function(data, k = 3) {
                     "Decision boundaries")
     return(out)
 }
-
 lda2(X)
+
+
