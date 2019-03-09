@@ -97,13 +97,8 @@ lda2 <- function(data, palette = heat.colors, ...) {
     }
     else { 
         library(sp)
-        runifx1 <- runif(1000,
-                         min = min(minx[, 1]),
-                         max = max(maxx[, 1]))
-        runifx2 <- runif(1000,
-                         min = min(minx[, 2]),
-                         max = max(maxx[, 2]))
-        runif <- cbind(runifx1, runifx2)
+        runif <- cbind(runif(1000, min = min(minx[, 1]), max = max(maxx[, 1])), 
+                       runif(1000, min = min(minx[, 2]), max = max(maxx[, 2])))
         dismc <- matrix(nrow = 1000, ncol = n_cla)
         for (h in (1:1000)) {
             for (i in (1:n_cla)) {
@@ -117,8 +112,8 @@ lda2 <- function(data, palette = heat.colors, ...) {
             classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
         }
         dismc <- data.frame(
-            x1 = runifx1, 
-            x2 = runifx2,
+            x1 = runif[, 1], 
+            x2 = runif[, 2],
             class = classmc,
             stringsAsFactors = FALSE
         )
@@ -138,17 +133,17 @@ lda2 <- function(data, palette = heat.colors, ...) {
         for (i in (2:n_cla)) {
             rgeos::gDifference(diff, hulls[[i]]) -> diff
         }
-        spsample(diff, n = 4000, "random") -> sample
+        spsample(diff, n = 5000, "random") -> sample
         sample@coords -> sample
-        dismc2 <- matrix(nrow = 4000, ncol = n_cla)
-        for (h in (1:4000)) {
+        dismc2 <- matrix(nrow = 5000, ncol = n_cla)
+        for (h in (1:5000)) {
             for (i in (1:n_cla)) {
                 dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
             }
         }
         colnames(dismc2) <- nam
         classmc2 <- c()
-        for (h in (1:4000)) {
+        for (h in (1:5000)) {
             classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
         }
         dismc2 <- data.frame(
@@ -172,11 +167,10 @@ lda2 <- function(data, palette = heat.colors, ...) {
         }
     }
     print(g)
-    list(pi, cov, mu, hulls) -> out
+    list(pi, cov, mu) -> out
     names(out) <- c("Prior probabilities", 
                     "Covariance matrix", 
-                    "Class means",
-                    "Hulls")
+                    "Class means")
     return(out)
 }
 lda2(X) -> r
