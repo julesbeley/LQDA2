@@ -124,9 +124,9 @@ lda2 <- function(data, palette = heat.colors, ...) {
         )
         rm(runifx1, runifx2)
         dismc <- dismc[order(dismc$class), ]
-        hulls <- list()
         mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
         box <- mtosp(box)
+        hulls <- list()
         for (i in (1:n_cla)) {
             hulls[[i]] <- as.data.frame(
                 concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
@@ -138,9 +138,41 @@ lda2 <- function(data, palette = heat.colors, ...) {
         for (i in (2:n_cla)) {
             rgeos::gDifference(diff, hulls[[i]]) -> diff
         }
+        spsample(diff, n = 4000, "random") -> sample
+        sample@coords -> sample
+        dismc2 <- matrix(nrow = 4000, ncol = n_cla)
+        for (h in (1:4000)) {
+            for (i in (1:n_cla)) {
+                dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+            }
+        }
+        colnames(dismc2) <- nam
+        classmc2 <- c()
+        for (h in (1:4000)) {
+            classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
+        }
+        dismc2 <- data.frame(
+            x1 = sample[, 1], 
+            x2 = sample[, 2],
+            class = classmc2,
+            stringsAsFactors = FALSE
+        ) 
+        dismc2 <- dismc2[order(dismc2$class), ]
+        for (i in (1:n_cla)) {
+            hulls[[i]] <- as.data.frame(
+                concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
+                                             dismc2$x2[dismc2$class %in% nam[i]]),
+                                       concavity = 50))
+        }
+        for (i in (1:n_cla)) {
+            g + geom_path(data = hulls[[i]],
+                          aes(x = V1, y = V2),
+                          size = 1,
+                          col = "grey30") -> g 
+        }
     }
     print(g)
-    list(pi, cov, mu, diff) -> out
+    list(pi, cov, mu, hulls) -> out
     names(out) <- c("Prior probabilities", 
                     "Covariance matrix", 
                     "Class means",
@@ -148,40 +180,8 @@ lda2 <- function(data, palette = heat.colors, ...) {
     return(out)
 }
 lda2(X) -> r
+r
 
-plot(r$Hulls)
-spsample(r$Hulls, n = 200, "random")
-points(spsample(r$Hulls, n = 200, "random"))
-
-
-# plotting section
-
-for (i in (1:n_cla)) {
-    g + geom_path(data = hulls[[i]],
-                  aes(x = V1, y = V2),
-                  size = 1,
-                  col = "grey30") -> g 
-}
-
-# sampling in area outside of a polygon!
-
-library(sp)
-library(rgeos)
-cbind(c(0, 3, 3, 0, 0), c(0, 0, 3, 3, 0)) -> pol
-cbind(c(0, 5, 5, 0, 0), c(0, 0, 5, 5, 0)) -> pol2
-cbind(c(1, 2, 2, 1, 1), c(1, 1, 2, 2, 1)) -> pol3
-sps <- SpatialPolygons(list(Polygons(list(Polygon(pol)), 1)))
-sps2 <- SpatialPolygons(list(Polygons(list(Polygon(pol2)), 1)))
-sps3 <- SpatialPolygons(list(Polygons(list(Polygon(pol3)), 1)))
-
-gDifference(sps2, sps3) -> diff
-plot(diff)
-points(spsample(diff, n = 2000, "random"))
-
-
-# convert back to data.frame for testing
-sps@polygons[[1]]@Polygons[[1]]@coords -> d
-diff@polygons[[1]]@Polygons[[1]]@coords 
 
 
 # gif test
