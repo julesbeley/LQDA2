@@ -117,7 +117,6 @@ lda2 <- function(data, palette = heat.colors, ...) {
             class = classmc,
             stringsAsFactors = FALSE
         )
-        rm(runifx1, runifx2)
         dismc <- dismc[order(dismc$class), ]
         mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
         box <- mtosp(box)
@@ -129,35 +128,40 @@ lda2 <- function(data, palette = heat.colors, ...) {
                                        concavity = 50))
             hulls[[i]] <- mtosp(hulls[[i]])
         }
-        rgeos::gDifference(box, hulls[[1]]) -> diff
-        for (i in (2:n_cla)) {
-            rgeos::gDifference(diff, hulls[[i]]) -> diff
-        }
-        spsample(diff, n = 5000, "random") -> sample
-        sample@coords -> sample
-        dismc2 <- matrix(nrow = 5000, ncol = n_cla)
-        for (h in (1:5000)) {
+        for (k in (1:3)) {
             for (i in (1:n_cla)) {
-                dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+                suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
             }
-        }
-        colnames(dismc2) <- nam
-        classmc2 <- c()
-        for (h in (1:5000)) {
-            classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
-        }
-        dismc2 <- data.frame(
-            x1 = sample[, 1], 
-            x2 = sample[, 2],
-            class = classmc2,
-            stringsAsFactors = FALSE
-        ) 
-        dismc2 <- dismc2[order(dismc2$class), ]
-        for (i in (1:n_cla)) {
-            hulls[[i]] <- as.data.frame(
-                concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
-                                             dismc2$x2[dismc2$class %in% nam[i]]),
-                                       concavity = 50))
+            rgeos::gDifference(box, hulls[[1]]) -> diff
+            for (i in (2:n_cla)) {
+                rgeos::gDifference(diff, hulls[[i]]) -> diff
+            }
+            spsample(diff, n = 2000, "random") -> sample
+            sample@coords -> sample
+            dismc2 <- matrix(nrow = 2000, ncol = n_cla)
+            for (h in (1:2000)) {
+                for (i in (1:n_cla)) {
+                    dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+                }
+            }
+            colnames(dismc2) <- nam
+            classmc2 <- c()
+            for (h in (1:2000)) {
+                classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
+            }
+            dismc2 <- data.frame(
+                x1 = sample[, 1], 
+                x2 = sample[, 2],
+                class = classmc2,
+                stringsAsFactors = FALSE
+            ) 
+            dismc2 <- dismc2[order(dismc2$class), ]
+            for (i in (1:n_cla)) {
+                hulls[[i]] <- as.data.frame(
+                    concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
+                                                 dismc2$x2[dismc2$class %in% nam[i]]),
+                                           concavity = 50))
+            }
         }
         for (i in (1:n_cla)) {
             g + geom_path(data = hulls[[i]],
@@ -173,9 +177,7 @@ lda2 <- function(data, palette = heat.colors, ...) {
                     "Class means")
     return(out)
 }
-lda2(X) -> r
-r
-
+lda2(X)
 
 
 # gif test
