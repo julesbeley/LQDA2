@@ -161,4 +161,3 @@ lda2 <- function(data, k = 3) {
 }
 
 lda2(X)
-
