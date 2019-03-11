@@ -96,19 +96,10 @@ lda2 <- function(data, k = 3) {
     else {
         library(sp)
         while (TRUE) {
-            runif <-
-                cbind(runif(
-                    2000,
-                    min = min(minx[, 1]),
-                    max = max(maxx[, 1])
-                ),
-                runif(
-                    2000,
-                    min = min(minx[, 2]),
-                    max = max(maxx[, 2])
-                ))
-            dismc <- matrix(nrow = 2000, ncol = n_cla)
-            for (h in (1:2000)) {
+            runif <- cbind(runif(1000, min = min(minx[, 1]), max = max(maxx[, 1])),
+                           runif(1000, min = min(minx[, 2]), max = max(maxx[, 2])))
+            dismc <- matrix(nrow = 1000, ncol = n_cla)
+            for (h in (1:1000)) {
                 for (i in (1:n_cla)) {
                     dismc[h, i] <-
                         t(runif[h,]) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
@@ -117,7 +108,7 @@ lda2 <- function(data, k = 3) {
             colnames(dismc) <- nam
             rownames(mu) <- nam
             classmc <- c()
-            for (h in (1:2000)) {
+            for (h in (1:1000)) {
                 classmc[h] <- names(dismc[h,])[dismc[h,] %in% max(dismc[h,])]
             }
             dismc <- data.frame(
@@ -141,14 +132,13 @@ lda2 <- function(data, k = 3) {
                                   silent = TRUE)
                 if ((class(hulls[[i]]) == "try-error")) {
                     stop <- FALSE
-                    break
                 }
             }
             if (isTRUE(stop))
                 break
         }
-        print(hulls)
     }
+    print(hulls)
     for (j in (1:k)) {
         for (i in (1:n_cla)) {
             suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
@@ -188,7 +178,6 @@ lda2 <- function(data, k = 3) {
                                   silent = TRUE)
                 if ((class(hulls[[i]]) == "try-error")) {
                     stop <- FALSE
-                    break
                 }
             }
             if (isTRUE(stop))
@@ -196,7 +185,7 @@ lda2 <- function(data, k = 3) {
         }
     }
     rm(dismc2)
-    list(pi, cov, mu, hulls) -> out
+    list(pi, cov, mu, hulls, diff) -> out
     names(out) <- c("Prior probabilities",
                     "Covariance matrix",
                     "Class means",
@@ -213,3 +202,4 @@ for (i in (1:length(t$`Decision boundaries`))) {
                   aes(x = V1, y = V2)) -> r
 }
 r
+
