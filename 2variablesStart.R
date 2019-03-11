@@ -1,3 +1,4 @@
+# ERROR HANDLING IS INEFFECTIVE - you have to resample if you want concaveman to work when it throws error
 # lapply instead of for?
 # develop qda function
 
@@ -108,13 +109,16 @@ lda2 <- function(data, k = 3) {
         box <- mtosp(box)
         hulls <- list()
         for (i in (1:n_cla)) {
+            j <- 60
             while(TRUE) {
-                try(hulls[[i]] <- as.data.frame(
+                hulls[[i]] <- try(as.data.frame(
                     concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
                                                  dismc$x2[dismc$class %in% nam[i]]),
-                                           concavity = 50)),
+                                           concavity = j)),
                     silent = TRUE)
-                if(!is(hulls[[i]], "try-error")) break
+                if(!(class(hulls[[i]]) == "try-error")) break
+                else j <- j - 2
+                }
             }
             hulls[[i]] <- mtosp(hulls[[i]])
         }
@@ -147,19 +151,20 @@ lda2 <- function(data, k = 3) {
             ) 
             dismc2 <- dismc2[order(dismc2$class), ]
             for (i in (1:n_cla)) {
+                m <- 60
                 while(TRUE) {
-                    try(hulls[[i]] <- as.data.frame(
-                        concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
-                                                     dismc2$x2[dismc2$class %in% nam[i]]),
-                                               concavity = 50)),
+                    hulls[[i]] <- try(as.data.frame(
+                        concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
+                                                     dismc$x2[dismc$class %in% nam[i]]),
+                                               concavity = j)),
                         silent = TRUE)
-                    if(!is(hulls[[i]], "try-error")) break
+                    if(!(class(hulls[[i]]) == "try-error")) break
+                    else m <- m - 2
                 }
                 names(hulls[[i]]) <- c("x1", "x2")
+                }
             }
             rm(dismc2)
-        }
-    }
     list(pi, cov, mu, hulls) -> out
     names(out) <- c("Prior probabilities", 
                     "Covariance matrix", 
@@ -167,6 +172,13 @@ lda2 <- function(data, k = 3) {
                     "Decision boundaries")
     return(out)
 }
-lda2(X)
+lda2(X, k = 10) -> t
 
-
+ggplot() +
+    geom_path(data = t$`Decision boundaries`[[1]],
+              aes(x = x1, y = x2)) -> r
+for (i in (1:length(t$`Decision boundaries`))) {
+    r + geom_path(data = t$`Decision boundaries`[[i]],
+                  aes(x = x1, y = x2)) -> r
+}  
+r
