@@ -4,13 +4,21 @@
 
 rm(list = ls())
 Xlist <- list()
-classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "brown", "car", "truck",
-                "limo", "coke", "soda")
+classnames <-
+    c("white", "black", "blue", "red", "green", "orange", "purple", "brown", "car", "truck", "limo", "coke", "soda")
 length <- runif(13, 100, 500)
 for (i in (1:runif(1, 2, 13))) {
     Xlist[[i]] <- data.frame(
-        x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
-        x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
+        x1 = rnorm(
+            length[i],
+            mean = runif(1,-10, 10),
+            sd = runif(1, 0.5, 4)
+        ),
+        x2 = rnorm(
+            length[i],
+            mean = runif(1,-10, 10),
+            sd = runif(1, 0.5, 4)
+        ),
         class = classnames[i]
     )
 }
@@ -28,7 +36,7 @@ lda2 <- function(data, k = 3) {
     mu <- matrix(nrow = n_cla, ncol = 2)
     for (i in (1:n_cla)) {
         pi[i] <- tab[i] / dim(data)[1]
-        mu[i, 1] <- mean(data$x1[data$class %in% nam[i]]) 
+        mu[i, 1] <- mean(data$x1[data$class %in% nam[i]])
         mu[i, 2] <- mean(data$x2[data$class %in% nam[i]])
     }
     names(pi) <- nam
@@ -40,14 +48,15 @@ lda2 <- function(data, k = 3) {
     ccov <- list()
     for (i in (1:n_cla)) {
         val[[i]] <- matrix(nrow = tab[i], ncol = 2)
-        val[[i]] <- cbind(data$x1[data$class %in% nam[i]], 
+        val[[i]] <- cbind(data$x1[data$class %in% nam[i]],
                           data$x2[data$class %in% nam[i]])
         dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
         for (j in (1:tab[i])) {
-            dev[[i]][j, ] <- val[[i]][j, ] - mu[i, ]
+            dev[[i]][j,] <- val[[i]][j,] - mu[i,]
         }
         ccov[[i]] <- matrix(nrow = 2, ncol = 2)
-        ccov[[i]] <- t(dev[[i]]) %*% dev[[i]] / (dim(data)[1] - n_cla)
+        ccov[[i]] <-
+            t(dev[[i]]) %*% dev[[i]] / (dim(data)[1] - n_cla)
     }
     dis <- c()
     exp <- c()
@@ -71,10 +80,12 @@ lda2 <- function(data, k = 3) {
                              rep.int(max(maxx[, 2]), 2)))
     if (all(pi %in% rep.int(pi[1], length(pi)))) {
         library(ggvoronoi)
-        voronoi_polygon(data = as.data.frame(mu),
-                        x = "x1", 
-                        y = "x2",
-                        outline = box) -> raw
+        voronoi_polygon(
+            data = as.data.frame(mu),
+            x = "x1",
+            y = "x2",
+            outline = box
+        ) -> raw
         rm(minx, maxx)
         hulls <- list()
         for (i in (1:n_cla)) {
@@ -82,103 +93,123 @@ lda2 <- function(data, k = 3) {
             names(hulls[[i]]) <- c("x1", "x2")
         }
     }
-    else { 
+    else {
         library(sp)
-        runif <- cbind(runif(1000, min = min(minx[, 1]), max = max(maxx[, 1])), 
-                       runif(1000, min = min(minx[, 2]), max = max(maxx[, 2])))
-        dismc <- matrix(nrow = 1000, ncol = n_cla)
-        for (h in (1:1000)) {
-            for (i in (1:n_cla)) {
-                dismc[h, i] <- t(runif[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+        while (TRUE) {
+            runif <-
+                cbind(runif(
+                    2000,
+                    min = min(minx[, 1]),
+                    max = max(maxx[, 1])
+                ),
+                runif(
+                    2000,
+                    min = min(minx[, 2]),
+                    max = max(maxx[, 2])
+                ))
+            dismc <- matrix(nrow = 2000, ncol = n_cla)
+            for (h in (1:2000)) {
+                for (i in (1:n_cla)) {
+                    dismc[h, i] <-
+                        t(runif[h,]) %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
+                }
             }
-        }
-        colnames(dismc) <- nam
-        rownames(mu) <- nam
-        classmc <- c()
-        for (h in (1:1000)) {
-            classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
-        }
-        dismc <- data.frame(
-            x1 = runif[, 1], 
-            x2 = runif[, 2],
-            class = classmc,
-            stringsAsFactors = FALSE
-        )
-        dismc <- dismc[order(dismc$class), ]
-        mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
-        box <- mtosp(box)
-        hulls <- list()
-        for (i in (1:n_cla)) {
-            j <- 60
-            while(TRUE) {
+            colnames(dismc) <- nam
+            rownames(mu) <- nam
+            classmc <- c()
+            for (h in (1:2000)) {
+                classmc[h] <- names(dismc[h,])[dismc[h,] %in% max(dismc[h,])]
+            }
+            dismc <- data.frame(
+                x1 = runif[, 1],
+                x2 = runif[, 2],
+                class = classmc,
+                stringsAsFactors = FALSE
+            )
+            dismc <- dismc[order(dismc$class),]
+            mtosp <- function(m) {
+                SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
+                } 
+            box <- mtosp(box)
+            hulls <- list()
+            stop <- TRUE
+            for (i in (1:n_cla)) {
                 hulls[[i]] <- try(as.data.frame(
                     concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
                                                  dismc$x2[dismc$class %in% nam[i]]),
-                                           concavity = j)),
-                    silent = TRUE)
-                if(!(class(hulls[[i]]) == "try-error")) break
-                else j <- j - 2
+                                           concavity = 50)),
+                                  silent = TRUE)
+                if ((class(hulls[[i]]) == "try-error")) {
+                    stop <- FALSE
+                    break
                 }
             }
-            hulls[[i]] <- mtosp(hulls[[i]])
+            if (isTRUE(stop))
+                break
         }
-        for (j in (1:k)) {
-            for (i in (1:n_cla)) {
-                suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
-            }
-            rgeos::gDifference(box, hulls[[1]]) -> diff
-            for (i in (2:n_cla)) {
-                rgeos::gDifference(diff, hulls[[i]]) -> diff
-            }
+        print(hulls)
+    }
+    for (j in (1:k)) {
+        for (i in (1:n_cla)) {
+            suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
+        }
+        rgeos::gDifference(box, hulls[[1]]) -> diff
+        for (i in (2:n_cla)) {
+            rgeos::gDifference(diff, hulls[[i]]) -> diff
+        }
+        while (TRUE) {
             spsample(diff, n = 2000, "random") -> sample
             sample@coords -> sample
             dismc2 <- matrix(nrow = 2000, ncol = n_cla)
             for (h in (1:2000)) {
                 for (i in (1:n_cla)) {
-                    dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+                    dismc2[h, i] <-
+                        sample[h,] %*% inv %*% mu[i,] - 0.5 %*% t(mu[i,]) %*% inv %*% mu[i,] + log(pi[i])
                 }
             }
             colnames(dismc2) <- nam
             classmc2 <- c()
             for (h in (1:2000)) {
-                classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
+                classmc2[h] <- names(dismc2[h,])[dismc2[h,] %in% max(dismc2[h,])]
             }
             dismc2 <- data.frame(
-                x1 = sample[, 1], 
+                x1 = sample[, 1],
                 x2 = sample[, 2],
                 class = classmc2,
                 stringsAsFactors = FALSE
-            ) 
-            dismc2 <- dismc2[order(dismc2$class), ]
+            )
+            dismc2 <- dismc2[order(dismc2$class),]
+            stop <- TRUE
             for (i in (1:n_cla)) {
-                m <- 60
-                while(TRUE) {
-                    hulls[[i]] <- try(as.data.frame(
-                        concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
-                                                     dismc$x2[dismc$class %in% nam[i]]),
-                                               concavity = j)),
-                        silent = TRUE)
-                    if(!(class(hulls[[i]]) == "try-error")) break
-                    else m <- m - 2
-                }
-                names(hulls[[i]]) <- c("x1", "x2")
+                hulls[[i]] <- try(as.data.frame(
+                    concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
+                                                 dismc$x2[dismc$class %in% nam[i]]),
+                                           concavity = 50)),
+                                  silent = TRUE)
+                if ((class(hulls[[i]]) == "try-error")) {
+                    stop <- FALSE
+                    break
                 }
             }
-            rm(dismc2)
+            if (isTRUE(stop))
+                break
+        }
+    }
+    rm(dismc2)
     list(pi, cov, mu, hulls) -> out
-    names(out) <- c("Prior probabilities", 
-                    "Covariance matrix", 
+    names(out) <- c("Prior probabilities",
+                    "Covariance matrix",
                     "Class means",
                     "Decision boundaries")
     return(out)
 }
-lda2(X, k = 10) -> t
+lda2(X) -> t
 
 ggplot() +
     geom_path(data = t$`Decision boundaries`[[1]],
-              aes(x = x1, y = x2)) -> r
+              aes(x = V1, y = V2)) -> r
 for (i in (1:length(t$`Decision boundaries`))) {
     r + geom_path(data = t$`Decision boundaries`[[i]],
-                  aes(x = x1, y = x2)) -> r
-}  
+                  aes(x = V1, y = V2)) -> r
+}
 r
