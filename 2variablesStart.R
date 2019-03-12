@@ -97,7 +97,7 @@ lda2 <- function(data, k = 3) {
         for (h in (1:1000)) {
             classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
         }
-        dismc <- data.frame(
+        dismc <- data.frame( # make sure all classes are sampled
             x1 = runif[, 1], 
             x2 = runif[, 2],
             class = classmc,
@@ -107,11 +107,11 @@ lda2 <- function(data, k = 3) {
         mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
         box <- mtosp(box)
         hulls <- list()
-        for (i in (1:n_cla)) {
+        for (i in (1:n_cla)) { # some classes aren't sampled, hence the concaveman error!
             hulls[[i]] <- as.data.frame(
                 concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
                                              dismc$x2[dismc$class %in% nam[i]]),
-                                       concavity = 50))
+                                       concavity = 20))
             hulls[[i]] <- mtosp(hulls[[i]])
         }
         for (j in (1:k)) {
@@ -146,7 +146,7 @@ lda2 <- function(data, k = 3) {
                 hulls[[i]] <- as.data.frame(
                     concaveman::concaveman(cbind(dismc2$x1[dismc2$class %in% nam[i]],
                                                  dismc2$x2[dismc2$class %in% nam[i]]),
-                                           concavity = 50))
+                                           concavity = 20))
                 names(hulls[[i]]) <- c("x1", "x2")
             }
             rm(dismc2)
@@ -159,6 +159,15 @@ lda2 <- function(data, k = 3) {
                     "Decision boundaries")
     return(out)
 }
+lda2(X) -> t
 
-lda2(X)
+ggplot() +
+    geom_path(data = t$`Decision boundaries`[[1]],
+              aes(x = x1, y = x2)) -> r
+for (i in (1:length(t$`Decision boundaries`))) {
+    r + geom_path(data = t$`Decision boundaries`[[i]],
+                  aes(x = x1, y = x2)) + theme_void() -> r
+}
+r
 
+write.csv(X, "WorkingExample.csv", row.names = FALSE)
