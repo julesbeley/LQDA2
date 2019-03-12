@@ -1,3 +1,4 @@
+# EMPTY HULLS BUG
 # separate graphical part from computation of decision boundary path
 # develop qda function
 
@@ -15,7 +16,7 @@ for (i in (1:runif(1, 2, 13))) {
 }
 do.call("rbind", Xlist) -> X
 
-lda2 <- function(data, k = 3) {
+lda2 <- function(data, k = 4) {
       library(ggplot2)
       if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
             names(data) <- c("x1", "x2", "class")
@@ -32,7 +33,6 @@ lda2 <- function(data, k = 3) {
       }
       names(pi) <- nam
       colnames(mu) <- c("x1", "x2")
-      col <- heat.colors(n = n_cla, alpha = 0.7)
       val <- list()
       dev <- list()
       mul <- list()
@@ -160,14 +160,22 @@ lda2 <- function(data, k = 3) {
       return(out)
 }
 lda2(X) -> t
-
+col <- heat.colors(length(table(X$class)))
 ggplot() +
-      geom_path(data = t$`Decision boundaries`[[1]],
-                aes(x = x1, y = x2)) -> r
-for (i in (1:length(t$`Decision boundaries`))) {
-      r + geom_path(data = t$`Decision boundaries`[[i]],
-                    aes(x = x1, y = x2)) + theme_void() -> r
+      geom_polygon(data = t$`Decision boundaries`[[1]],
+                aes(x = x1, y = x2), fill = col[1], col = "black") -> r
+for (i in (2:length(t$`Decision boundaries`))) {
+      r + geom_polygon(data = t$`Decision boundaries`[[i]],
+                    aes(x = x1, y = x2),
+                    fill = col[i],
+                    col = "black") + theme_void() -> r
 }
 r
+table(X$class)
+sd(X$x2[X$class == "brown"])
+sd(X$x2)
+mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
+SpatialPolygons(list()) # = null polygon which will replace "try-error" hull
 
-write.csv(X, "WorkingExample.csv", row.names = FALSE)
+# if class is not detected by random sampling, add bivariate normal sample around class centroid
+# if this does not work, error message saying that this class is too small, that its sd is too small
