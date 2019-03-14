@@ -1,5 +1,5 @@
 # EMPTY HULLS BUG
-# separate graphical part from computation of decision boundary path
+# replace values near bounding box with actual bounding box values
 # develop qda function
 
 rm(list = ls())
@@ -104,15 +104,36 @@ lda2 <- function(data, k = 4) {
                   stringsAsFactors = FALSE
             )
             dismc <- dismc[order(dismc$class), ]
+            add <- list()
+            for (i in (1:n_cla)) {   # patch for missing class in dismc
+                  if (length(dismc$x1[dismc$class = nam[i]]) %in% 0) {
+                        cbind(rnorm(n = 300,
+                                    mean = mu[i, 1],
+                                    sd = sd(data$x1[data$class %in% nam[i]])),
+                              rnorm(n = 300,
+                                    mean = mu[i, 2],
+                                    sd = sd(data$x2[data$class %in% nam[i]])
+                              )) -> add[[i]]
+                        dismc3 <- matrix(nrow = 300, ncol = n_cla)
+                        for (h in (1:300)) {
+                              dismc3[h, i] <- t(add[[i]][h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+                        }
+                        colnames(dismc3) <- nam
+                  }
+            }
             mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
             box <- mtosp(box)
             hulls <- list()
-            for (i in (1:n_cla)) { # some classes aren't sampled, hence the concaveman error!
-                  hulls[[i]] <- as.data.frame(
+            for (i in (1:n_cla)) { 
+                  hulls[[i]] <- try(as.data.frame(
                         concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
                                                      dismc$x2[dismc$class %in% nam[i]]),
-                                               concavity = 20))
-                  hulls[[i]] <- mtosp(hulls[[i]])
+                                               concavity = 20)),
+                        silent = TRUE)
+                  hulls[[i]] <- try(mtosp(hulls[[i]]), silent = TRUE) 
+                  if (class(hulls[[i]]) %in% "try-error") { # error message: class i too small
+
+                  }
             }
             for (j in (1:k)) {
                   for (i in (1:n_cla)) {
@@ -175,6 +196,11 @@ table(X$class)
 sd(X$x2[X$class == "brown"])
 sd(X$x2)
 mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
+
+cbind(c(1, 0), c("blue", "green")) -> b
+as.data.frame(b, stringsAsFactors = FALSE) -> b
+length(b$V1[b$V2 %in% "red"])
+
 SpatialPolygons(list()) # = null polygon which will replace "try-error" hull
 
 # if class is not detected by random sampling, add bivariate normal sample around class centroid
