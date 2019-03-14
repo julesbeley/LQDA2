@@ -97,44 +97,69 @@ lda2 <- function(data, k = 4) {
             for (h in (1:1000)) {
                   classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
             }
-            dismc <- data.frame( # make sure all classes are sampled!
+            dismc <- data.frame( 
                   x1 = runif[, 1], 
                   x2 = runif[, 2],
                   class = classmc,
                   stringsAsFactors = FALSE
             )
             dismc <- dismc[order(dismc$class), ]
-            add <- list()
-            for (i in (1:n_cla)) {   # patch for missing class in dismc
-                  if (length(dismc$x1[dismc$class = nam[i]]) %in% 0) {
-                        cbind(rnorm(n = 300,
-                                    mean = mu[i, 1],
-                                    sd = sd(data$x1[data$class %in% nam[i]])),
-                              rnorm(n = 300,
-                                    mean = mu[i, 2],
-                                    sd = sd(data$x2[data$class %in% nam[i]])
-                              )) -> add[[i]]
-                        dismc3 <- matrix(nrow = 300, ncol = n_cla)
-                        for (h in (1:300)) {
-                              dismc3[h, i] <- t(add[[i]][h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+            test <- 0
+            for (i in (1:n_cla)) {
+                  if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) test <- test + 1
+            }
+            if (test != 0) {
+                  warning("Class missing: running patch")
+                  add <- list()
+                  for (i in (1:n_cla)) { 
+                        if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) {
+                              cbind(rnorm(n = 300,
+                                          mean = mu[i, 1],
+                                          sd = sd(data$x1[data$class %in% nam[i]])),
+                                    rnorm(n = 300,
+                                          mean = mu[i, 2],
+                                          sd = sd(data$x2[data$class %in% nam[i]])
+                                    )) -> add[[i]]
                         }
-                        colnames(dismc3) <- nam
                   }
+                  do.call("rbind", add) -> add
+                  dismc3 <- matrix(nrow = nrow(add), ncol = n_cla)
+                  for (i in (1:n_cla)) {
+                        for (h in (1:nrow(add))) {
+                              dismc3[h, i] <- t(add[h, ]) %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
+                        }
+                  }
+                  colnames(dismc3) <- nam
+                  classmc3 <- c()
+                  for (h in (1:300)) {
+                        classmc3[h] <- names(dismc3[h, ])[dismc3[h, ] %in% max(dismc3[h, ])]
+                  }
+                  dismc3 <- data.frame(
+                        x1 = add[, 1],
+                        x2 = add[, 2],
+                        class = classmc3
+                  )
+                  rbind(dismc, dismc3) -> dismc
+                  dismc <- dismc[order(dismc$class), ]
             }
             mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
             box <- mtosp(box)
             hulls <- list()
+            marker <- c()
             for (i in (1:n_cla)) { 
                   hulls[[i]] <- try(as.data.frame(
                         concaveman::concaveman(cbind(dismc$x1[dismc$class %in% nam[i]],
                                                      dismc$x2[dismc$class %in% nam[i]]),
                                                concavity = 20)),
                         silent = TRUE)
-                  hulls[[i]] <- try(mtosp(hulls[[i]]), silent = TRUE) 
+                  hulls[[i]] <- suppressWarnings(try(mtosp(hulls[[i]]), silent = TRUE)) 
                   if (class(hulls[[i]]) %in% "try-error") { # error message: class i too small
-
+                        stop <- TRUE
+                        marker[i] <- nam[i]
                   }
             }
+            marker <- marker[!is.na(marker)]
+            if (isTRUE(stop)) stop(paste("Class", marker, "is too small to be approximated"))
             for (j in (1:k)) {
                   for (i in (1:n_cla)) {
                         suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
@@ -181,6 +206,7 @@ lda2 <- function(data, k = 4) {
       return(out)
 }
 lda2(X) -> t
+
 col <- heat.colors(length(table(X$class)))
 ggplot() +
       geom_polygon(data = t$`Decision boundaries`[[1]],
@@ -193,15 +219,3 @@ for (i in (2:length(t$`Decision boundaries`))) {
 }
 r
 table(X$class)
-sd(X$x2[X$class == "brown"])
-sd(X$x2)
-mtosp <- function(m) SpatialPolygons(list(Polygons(list(Polygon(m)), 1)))
-
-cbind(c(1, 0), c("blue", "green")) -> b
-as.data.frame(b, stringsAsFactors = FALSE) -> b
-length(b$V1[b$V2 %in% "red"])
-
-SpatialPolygons(list()) # = null polygon which will replace "try-error" hull
-
-# if class is not detected by random sampling, add bivariate normal sample around class centroid
-# if this does not work, error message saying that this class is too small, that its sd is too small
