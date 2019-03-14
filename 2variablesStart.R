@@ -6,7 +6,7 @@ Xlist <- list()
 classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "brown", "car", "truck",
                 "limo", "coke", "soda")
 length <- runif(13, 100, 500)
-for (i in (1:runif(1, 2, 13))) {
+for (i in (1:runif(1, 2, 6))) {
       Xlist[[i]] <- data.frame(
             x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
             x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
@@ -19,7 +19,7 @@ lda2 <- function(data, turns = 3) {
       if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
             names(data) <- c("x1", "x2", "class")
       }
-      tab <- table(data$class)
+      tab <- table(droplevels(data$class))
       n_cla <- dim(tab)
       nam <- names(tab)
       pi <- c()
@@ -157,7 +157,7 @@ lda2 <- function(data, turns = 3) {
                   }
             }
             marker <- marker[!is.na(marker)]
-            if (isTRUE(stop)) stop(paste("Class", marker, "is too small to be approximated"))
+            if (isTRUE(stop)) stop(paste("Class `", marker, "` is too small to be approximated", sep = ""))
             for (j in (1:turns)) {
                   for (i in (1:n_cla)) {
                         suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
@@ -166,17 +166,17 @@ lda2 <- function(data, turns = 3) {
                   for (i in (2:n_cla)) {
                         rgeos::gDifference(diff, hulls[[i]]) -> diff
                   }
-                  spsample(diff, n = 2000, "random") -> sample
+                  spsample(diff, n = 2500, "random") -> sample
                   sample@coords -> sample
-                  dismc2 <- matrix(nrow = 2000, ncol = n_cla)
-                  for (h in (1:2000)) {
+                  dismc2 <- matrix(nrow = 2500, ncol = n_cla)
+                  for (h in (1:2500)) {
                         for (i in (1:n_cla)) {
                               dismc2[h, i] <- sample[h, ] %*% inv %*% mu[i, ] - 0.5 %*% t(mu[i, ]) %*% inv %*% mu[i, ] + log(pi[i])
                         }
                   }
                   colnames(dismc2) <- nam
                   classmc2 <- c()
-                  for (h in (1:2000)) {
+                  for (h in (1:2500)) {
                         classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
                   }
                   dismc2 <- data.frame(
@@ -203,7 +203,9 @@ lda2 <- function(data, turns = 3) {
                       "Decision boundaries")
       return(out)
 }
-lda2(X, turns = 4) -> t
+
+lda2(X) -> t
+
 
 library(ggplot2)
 col <- heat.colors(length(table(X$class)))
