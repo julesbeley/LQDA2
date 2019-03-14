@@ -1,4 +1,3 @@
-# EMPTY HULLS BUG
 # replace values near bounding box with actual bounding box values
 # develop qda function
 
@@ -16,8 +15,7 @@ for (i in (1:runif(1, 2, 13))) {
 }
 do.call("rbind", Xlist) -> X
 
-lda2 <- function(data, k = 4) {
-      library(ggplot2)
+lda2 <- function(data, turns = 3) {
       if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
             names(data) <- c("x1", "x2", "class")
       }
@@ -160,7 +158,7 @@ lda2 <- function(data, k = 4) {
             }
             marker <- marker[!is.na(marker)]
             if (isTRUE(stop)) stop(paste("Class", marker, "is too small to be approximated"))
-            for (j in (1:k)) {
+            for (j in (1:turns)) {
                   for (i in (1:n_cla)) {
                         suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
                   }
@@ -201,12 +199,13 @@ lda2 <- function(data, k = 4) {
       list(pi, cov, mu, hulls) -> out
       names(out) <- c("Prior probabilities", 
                       "Covariance matrix", 
-                      "Class means",
+                      "Class means", 
                       "Decision boundaries")
       return(out)
 }
-lda2(X) -> t
+lda2(X, turns = 4) -> t
 
+library(ggplot2)
 col <- heat.colors(length(table(X$class)))
 ggplot() +
       geom_polygon(data = t$`Decision boundaries`[[1]],
@@ -218,4 +217,3 @@ for (i in (2:length(t$`Decision boundaries`))) {
                     col = "black") + theme_void() -> r
 }
 r
-table(X$class)
