@@ -6,7 +6,7 @@ Xlist <- list()
 classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "brown", "car", "truck",
                 "limo", "coke", "soda")
 length <- runif(13, 100, 500)
-for (i in (1:runif(1, 2, 6))) {
+for (i in (1:runif(1, 2, 10))) {
       Xlist[[i]] <- data.frame(
             x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
             x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
@@ -150,10 +150,7 @@ lda2 <- function(data, turns = 3) {
                                                concavity = 20)),
                         silent = TRUE)
                   hulls[[i]] <- suppressWarnings(try(mtosp(hulls[[i]]), silent = TRUE)) 
-                  if (class(hulls[[i]]) %in% "try-error") { # error message: class i too small
-                        stop <- TRUE
-                        marker[i] <- nam[i]
-                  }
+                  if (class(hulls[[i]]) %in% "try-error") stop <- TRUE; marker[i] <- nam[i]
             }
             marker <- marker[!is.na(marker)]
             if (isTRUE(stop)) stop(paste("Class `", marker, "` is too small to be approximated", sep = ""))
@@ -207,14 +204,14 @@ lda2(X) -> t
 
 
 library(ggplot2)
-col <- heat.colors(length(table(X$class)))
+
+col <- topo.colors(length(table(X$class)))
 ggplot() +
       geom_polygon(data = t$`Decision boundaries`[[1]],
-                aes(x = x1, y = x2), fill = col[1], col = "black") -> r
+                aes(x = x1, y = x2), fill = col[1]) -> r
 for (i in (2:length(t$`Decision boundaries`))) {
       r + geom_polygon(data = t$`Decision boundaries`[[i]],
                     aes(x = x1, y = x2),
-                    fill = col[i],
-                    col = "black") + theme_void() -> r
+                    fill = col[i]) + theme_void() -> r
 }
 r
