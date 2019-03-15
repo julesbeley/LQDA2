@@ -16,12 +16,8 @@ for (i in (1:runif(1, 2, 6))) {
 do.call("rbind", Xlist) -> X
 
 lda2 <- function(data, turns = 3) {
-      if (ncol(data) != 3) {
-            stop("Incorrect number of variables")
-      }
-      if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
-            names(data) <- c("x1", "x2", "class")
-      }
+      if (ncol(data) != 3) stop("Incorrect number of variables")
+      if (is.numeric(data[, 1] && is.numeric(data[, 2]))) names(data) <- c("x1", "x2", "class")
       tab <- table(droplevels(data$class))
       n_cla <- dim(tab)
       nam <- names(tab)
