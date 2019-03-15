@@ -6,7 +6,7 @@ Xlist <- list()
 classnames <- c("white", "black", "blue", "red", "green", "orange", "purple", "brown", "car", "truck",
                 "limo", "coke", "soda")
 length <- runif(13, 100, 500)
-for (i in (1:runif(1, 2, 10))) {
+for (i in (1:runif(1, 2, 15))) {
       Xlist[[i]] <- data.frame(
             x1 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
             x2 = rnorm(length[i], mean = runif(1, -10, 10), sd = runif(1, 0.5, 4)),
@@ -39,9 +39,7 @@ lda2 <- function(data, turns = 3) {
             val[[i]] <- cbind(data$x1[data$class %in% nam[i]], 
                               data$x2[data$class %in% nam[i]])
             dev[[i]] <- matrix(nrow = tab[i], ncol = 2)
-            for (j in (1:tab[i])) {
-                  dev[[i]][j, ] <- val[[i]][j, ] - mu[i, ]
-            }
+            for (j in (1:tab[i])) dev[[i]][j, ] <- val[[i]][j, ] - mu[i, ]
             ccov[[i]] <- matrix(nrow = 2, ncol = 2)
             ccov[[i]] <- t(dev[[i]]) %*% dev[[i]] / (nrow(data) - n_cla)
       }
@@ -91,9 +89,7 @@ lda2 <- function(data, turns = 3) {
             colnames(dismc) <- nam
             rownames(mu) <- nam
             classmc <- c()
-            for (h in (1:1000)) {
-                  classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
-            }
+            for (h in (1:1000)) classmc[h] <- names(dismc[h, ])[dismc[h, ] %in% max(dismc[h, ])]
             dismc <- data.frame( 
                   x1 = runif[, 1], 
                   x2 = runif[, 2],
@@ -102,9 +98,7 @@ lda2 <- function(data, turns = 3) {
             )
             dismc <- dismc[order(dismc$class), ]
             test <- c()
-            for (i in (1:n_cla)) {
-                  if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) test[i] <- 1
-            }
+            for (i in (1:n_cla)) if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) test[i] <- 1
             if (any(test == 1)) {
                   warning("Class missing: running patch")
                   add <- list()
@@ -128,9 +122,7 @@ lda2 <- function(data, turns = 3) {
                   }
                   colnames(dismc3) <- nam
                   classmc3 <- c()
-                  for (h in (1:300)) {
-                        classmc3[h] <- names(dismc3[h, ])[dismc3[h, ] %in% max(dismc3[h, ])]
-                  }
+                  for (h in (1:300)) classmc3[h] <- names(dismc3[h, ])[dismc3[h, ] %in% max(dismc3[h, ])]
                   dismc3 <- data.frame(
                         x1 = add[, 1],
                         x2 = add[, 2],
@@ -155,13 +147,10 @@ lda2 <- function(data, turns = 3) {
             marker <- marker[!is.na(marker)]
             if (isTRUE(stop)) stop(paste("Class `", marker, "` is too small to be approximated", sep = ""))
             for (j in (1:turns)) {
-                  for (i in (1:n_cla)) {
-                        suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
-                  }
+                  for (i in (1:n_cla)) suppressWarnings(hulls[[i]] <- mtosp(hulls[[i]]))
+
                   rgeos::gDifference(box, hulls[[1]]) -> diff
-                  for (i in (2:n_cla)) {
-                        rgeos::gDifference(diff, hulls[[i]]) -> diff
-                  }
+                  for (i in (2:n_cla)) rgeos::gDifference(diff, hulls[[i]]) -> diff
                   spsample(diff, n = 2500, "random") -> sample
                   sample@coords -> sample
                   dismc2 <- matrix(nrow = 2500, ncol = n_cla)
@@ -172,9 +161,7 @@ lda2 <- function(data, turns = 3) {
                   }
                   colnames(dismc2) <- nam
                   classmc2 <- c()
-                  for (h in (1:2500)) {
-                        classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
-                  }
+                  for (h in (1:2500)) classmc2[h] <- names(dismc2[h, ])[dismc2[h, ] %in% max(dismc2[h, ])]
                   dismc2 <- data.frame(
                         x1 = sample[, 1], 
                         x2 = sample[, 2],
@@ -205,7 +192,7 @@ lda2(X) -> t
 
 library(ggplot2)
 
-col <- topo.colors(length(table(X$class)))
+col <- heat.colors(length(table(X$class)))
 ggplot() +
       geom_polygon(data = t$`Decision boundaries`[[1]],
                 aes(x = x1, y = x2), fill = col[1]) -> r
@@ -215,3 +202,4 @@ for (i in (2:length(t$`Decision boundaries`))) {
                     fill = col[i]) + theme_void() -> r
 }
 r
+
