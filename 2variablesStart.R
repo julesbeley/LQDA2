@@ -16,6 +16,9 @@ for (i in (1:runif(1, 2, 6))) {
 do.call("rbind", Xlist) -> X
 
 lda2 <- function(data, turns = 3) {
+      if (ncol(data) != 3) {
+            stop("Incorrect number of dimensions")
+      }
       if (is.numeric(data[, 1] && is.numeric(data[, 2]))) {
             names(data) <- c("x1", "x2", "class")
       }
@@ -25,7 +28,7 @@ lda2 <- function(data, turns = 3) {
       pi <- c()
       mu <- matrix(nrow = n_cla, ncol = 2)
       for (i in (1:n_cla)) {
-            pi[i] <- tab[i] / dim(data)[1]
+            pi[i] <- tab[i] / nrow(data)
             mu[i, 1] <- mean(data$x1[data$class %in% nam[i]]) 
             mu[i, 2] <- mean(data$x2[data$class %in% nam[i]])
       }
@@ -44,7 +47,7 @@ lda2 <- function(data, turns = 3) {
                   dev[[i]][j, ] <- val[[i]][j, ] - mu[i, ]
             }
             ccov[[i]] <- matrix(nrow = 2, ncol = 2)
-            ccov[[i]] <- t(dev[[i]]) %*% dev[[i]] / (dim(data)[1] - n_cla)
+            ccov[[i]] <- t(dev[[i]]) %*% dev[[i]] / (nrow(data) - n_cla)
       }
       dis <- c()
       exp <- c()
@@ -102,15 +105,15 @@ lda2 <- function(data, turns = 3) {
                   stringsAsFactors = FALSE
             )
             dismc <- dismc[order(dismc$class), ]
-            test <- 0
+            test <- c()
             for (i in (1:n_cla)) {
-                  if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) test <- test + 1
+                  if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) test[i] <- 1
             }
-            if (test != 0) {
+            if (any(test == 1)) {
                   warning("Class missing: running patch")
                   add <- list()
                   for (i in (1:n_cla)) { 
-                        if (length(dismc$x1[dismc$class %in% nam[i]]) == 0) {
+                        if (test[i] == 1) {
                               cbind(rnorm(n = 300,
                                           mean = mu[i, 1],
                                           sd = sd(data$x1[data$class %in% nam[i]])),
