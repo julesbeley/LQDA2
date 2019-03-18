@@ -109,8 +109,7 @@ lda2 <- function(data, turns = 3) {
                                           sd = sd(data$x1[data$class %in% nam[i]])),
                                     rnorm(n = 300,
                                           mean = mu[i, 2],
-                                          sd = sd(data$x2[data$class %in% nam[i]])
-                                    )) -> add[[i]]
+                                          sd = sd(data$x2[data$class %in% nam[i]]))) -> add[[i]]
                         }
                   }
                   do.call("rbind", add) -> add
@@ -202,4 +201,3 @@ for (i in (2:length(t$`Decision boundaries`))) {
                     fill = col[i]) + theme_void() -> r
 }
 r
-
